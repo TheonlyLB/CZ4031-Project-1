@@ -1,0 +1,85 @@
+Derek Banas Golang Tutorial Notes
+Golang package is a collection of related .go files
+
+import (
+"library"
+"library"
+)
+
+Golang module is a collection of packages
+If var name/type starts with capital, it can be accessed outside the package
+var vName = "Zon"
+
+// alias for Println
+var pl = fmt.Println
+
+// create keyboard input reader object
+reader := bufio.NewReader(os.Stdin)
+// read string until \n, store in name var, store error message
+name, err := reader.ReadString('\n')
+
+// Datatype of var
+reflect.TypeOf(var)
+Casting: var v2 = int(var1)
+
+:= is for declaration + assignment
+Logical operators: && || !
+rune datatype is equivalent to python char
+math.Max(a,b)
+
+// Handle error
+if err == nil {
+pl("Hello ", name)
+} else {
+// stop program, display error message
+log.Fatal(err)
+}
+
+Time
+now := time.Now()
+year := now.Year()
+Stores seconds since 1/1/1970 as seed for random num generator
+seed := time.Now().Unix()
+rand.Seed(seed)
+Generate random num between 0 and n-1: rand.Intn(n)
+
+Formatted string
+fmt.Printf("%d %c %f %t %s\n",integer, character, float, boolean, string)
+
+For Loop
+for initialization;condition;increment{}
+
+Arrays have fixed length, elements have same datatype
+array := [size]type{elements}
+for var := range(array){} to iterate over and access each element in array
+
+Functions
+func name(paramname type) (returntype) {body}
+
+Pointers
+ptr_name *type, points to &var assigned
+*ptr_name to access value at ptr location
+
+Files
+os.Stat(filename) checks existence of file
+f :=os.Create(filename)
+os.OpenFile(filename, access_mode) //access_mode: os.O_RDWR, os.O_APPEND, etc
+defer f.Close() keeps f open until end of function is reached
+f.WriteString(str)
+
+scan = bufio.NewScanner(f)
+for scan.Scan(){scan.Text()} to access each line of f
+
+Import Packages
+import packagename "directory to package file"
+packagename.var/func() to access var/func in package
+
+Structs store values with diff datatypes
+// define struct
+type name struct {
+var_name datatype
+}
+var instance_name struct_name //create struct
+instance_name.var_name = value
+
+Binary Search Tree in Golang
