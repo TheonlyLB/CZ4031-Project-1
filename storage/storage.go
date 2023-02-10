@@ -32,15 +32,20 @@ type disk struct {
 	numRecords       uint32 //num of records inserted
 	secondLevelIndex []block
 	lookUpTable      map[*byte]recordLocation // key: record address, value: block index
+	// include a pointer to curblock
+	// deletedArray [[addToRecord,sizeOfRecord]]
 }
-
+// revised block struct
 type block struct {
 	numRecord        uint8  //num of records in block
 	recordValueArray []byte //byte array storing record values
+	deletedRecordArray []*[]byte //contains addresses of deleted records
+	hasCapacity bool //indicates if block has capacity
 }
 
 type record struct {
 	// fields
+	// MISSING header [] include length and also a deleted marker
 	tConst        [tConstLength]byte
 	averageRating uint8  //1 byte
 	numVotes      []byte //length not initialised
@@ -115,6 +120,7 @@ func createRecord(tConst string, averageRating float64, numVotes int64) record {
 	return recordObject
 }
 
+// TO BE COMPLETED
 // WriteRecord Write record into the virtual disk, with packing into bytes
 // Return the starting address of the record in the block, and error if any.
 func (disk *VirtualDisk) WriteRecord(record *Record) (*byte, error) {
@@ -157,6 +163,7 @@ func (disk *VirtualDisk) WriteRecord(record *Record) (*byte, error) {
 	return recordAddr, nil
 }
 
+// TO BE COMPLETED
 // LoadRecords Load records from tsv file into VirtualDisk
 // dir is the relative file path
 func (disk *VirtualDisk) LoadRecords(dir string) {
@@ -247,3 +254,4 @@ func BlockToRecords(block Block) ([]Record, []*byte) {
 
 	return records, pointers
 }
+
