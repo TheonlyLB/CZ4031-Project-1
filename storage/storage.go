@@ -22,7 +22,7 @@ const (
 	tConstLength    = 10
 	avgRatingLength = 1
 )
-
+// included deletedArray and recordSize ben
 type disk struct {
 	capacity         uint8  //capacity in MB
 	blockSize        uint8  //block size in bytes
@@ -32,20 +32,19 @@ type disk struct {
 	numRecords       uint32 //num of records inserted
 	secondLevelIndex []block
 	lookUpTable      map[*byte]recordLocation // key: record address, value: block index
-	// include a pointer to curblock
-	// deletedArray [[addToRecord,sizeOfRecord]]
+	deletedArray     []*recordLocation //stores memory address of deleted record's recordLocation
+	recordSize       uint8 //record size in bytes
 }
 // revised block struct
+// included recordIndex ben
 type block struct {
-	numRecord        uint8  //num of records in block
+	recordIndex      uint16  // index of current record for insertion 
 	recordValueArray []byte //byte array storing record values
-	deletedRecordArray []*[]byte //contains addresses of deleted records
-	hasCapacity bool //indicates if block has capacity
 }
-
+// included deleted bool ben
 type record struct {
-	// fields
-	// MISSING header [] include length and also a deleted marker
+	// include a header for deleted bool
+	deleted       bool // true if deleted
 	tConst        [tConstLength]byte
 	averageRating uint8  //1 byte
 	numVotes      []byte //length not initialised
@@ -91,7 +90,7 @@ func createBlock(diskObject *disk) (uint32, error) {
 	}
 
 }
-
+// Doesnt seem to be used, especially when there is already a writerecord that handles that creation
 // Pack fields of data tuple into record
 func createRecord(tConst string, averageRating float64, numVotes int64) record {
 
@@ -99,19 +98,20 @@ func createRecord(tConst string, averageRating float64, numVotes int64) record {
 
 	// pack tConst field
 	// convert string to unicode
-	recordObject.tConst =
+	recordObject.tConst = tConst
 	// pack averageRating field
 	recordObject.averageRating = uint8(averageRating * 10)
-
-	//Assign variable length of numVotes field with Golang slice
-	var numVotesLength int
-	if numVotes <= 255 {
-		numVotesLength = 1
-	} else if 255 < numVotes && numVotes <= 65535 {
-		numVotesLength = 2
-	} else if 65535 < numVotes && numVotes <= 4294967295 {
-		numVotesLength = 4
-	}
+	// assign numvotes to instance of record
+	recordObject.numVotes = 
+	// //Assign variable length of numVotes field with Golang slice
+	// var numVotesLength int
+	// if numVotes <= 255 {
+	// 	numVotesLength = 1
+	// } else if 255 < numVotes && numVotes <= 65535 {
+	// 	numVotesLength = 2
+	// } else if 65535 < numVotes && numVotes <= 4294967295 {
+	// 	numVotesLength = 4
+	// }
 
 	numVotesSlice := make([]byte, numVotesLength)
 	// pack numVotes field
@@ -120,53 +120,58 @@ func createRecord(tConst string, averageRating float64, numVotes int64) record {
 	return recordObject
 }
 
-// TO BE COMPLETED
+// TO BE TESTED
 // WriteRecord Write record into the virtual disk, with packing into bytes
 // Return the starting address of the record in the block, and error if any.
-func (disk *VirtualDisk) WriteRecord(record *Record) (*byte, error) {
+func (diskObject *disk) WriteRecord(recordObject *record) (*byte, error) {
 
 	// Record validations
-	if record.NumVotes == 0 {
-		panic("NumVotes can't be zero")
+	if recordObject.numVotes == 0 {
+		panic("numVotes can't be zero")
 	}
-
-	if len([]rune(record.Tconst)) > TconstSize {
-		panic("Tconst size is too long")
+	// REVIEW max value of tconst
+	if len([]rune(recordObject.tConst)) > TconstSize {
+		panic("tconst size is too long")
 	}
-
-	if record.AverageRating > 3.4e+38 {
-		panic("AverageRating is too big")
+	
+	if recordObject.averageRating > 3.4e+38 {
+		panic("averageRating is too big")
 	}
+	// calc blockCapacity using blockSize and recordSize
+	blockCapacity := diskObject.blockSize / (diskObject.recordSize + 2) // REVIEW 2 bytes for the block header
+	
+	// retrieve current block
+	currentBlock = diskObject.secondLevelIndex[diskObject.blockIndex]
 
-	index := disk.BlockHeight - 1
-	block := &disk.Blocks[index]
-
-	blockCapacity := disk.BlockSize / (RecordSize + 2) // 2 bytes for the block header
-
-	//Last block is full, create a new block
-	if int(block.NumRecord) >= blockCapacity {
-		i, err := disk.newBlock()
-		if err != nil {
-			return nil, errors.New("fail to write record")
+	// if current block has recordIndex > blockCapcity
+	if int(currentBlock.recordIndex)>=blockCapacity{
+		// REVIEW need to create block and should return the blockObject while allocated the memory
+		_, err := createBlock(&diskObject)
+		if err!=nil{
+			panic("Error in WriteRecord, unable to createBlock when block is full")
 		}
-		index = i
-		block = &disk.Blocks[index]
+		currentBlock = diskObject.secondLevelIndex[diskObject.blockIndex]
 	}
+	// currentblock is ready for us to insert record
 
-	recordB := RecordToBytes(record)
+	// convert record to bytes to be stored
+	recordInBytes := RecordToBytes(record)
 
-	copy(block.Content[block.NumRecord*RecordSize:], recordB) // Copy record into block
-	recordAddr := &block.Content[block.NumRecord*RecordSize]
-	disk.LuTable[recordAddr] = RecordLocation{BlockIndex: index, Index: int(block.NumRecord)}
+	// copy record into block
+	copy(currentBlock.recordValueArray[currentBlock.recordIndex*diskObject.recordSize],recordInBytes)
+	// retrieve recordAddress
+	recordAddress := &currentBlock.recordValueArray[currentBlock.recordIndex*diskObject.recordSize]
+	// update lookuptable from address to recordlocation object
+	diskObject.lookUpTable[recordAddress] = recordLocation{blockIndex: diskObject.blockIndex, recordIndex: int(currentBlock.recordIndex)}
 
-	block.NumRecord += 1
-	return recordAddr, nil
+	currentBlock.numRecord += 1
+	currentBlock.recordIndex+=1
+	return recordAddress, nil
 }
 
-// TO BE COMPLETED
-// LoadRecords Load records from tsv file into VirtualDisk
+// LoadRecords Load records from tsv file into disk
 // dir is the relative file path
-func (disk *VirtualDisk) LoadRecords(dir string) {
+func (diskObject *disk) LoadRecords(dir string) {
 	fmt.Println("Loading records from file....")
 	// open file
 	f, err := os.ReadFile(dir)
@@ -180,6 +185,7 @@ func (disk *VirtualDisk) LoadRecords(dir string) {
 
 	for _, rec := range records[1:] {
 
+
 		avgRating, err := strconv.ParseFloat(rec[1], 32)
 		if err != nil {
 			panic("avgRating can't fit into float32")
@@ -191,13 +197,13 @@ func (disk *VirtualDisk) LoadRecords(dir string) {
 			panic("numVotes can't fit into int32")
 		}
 
-		record := Record{
+		recordObject := record{
 			Tconst:        rec[0],
 			AverageRating: float32(avgRating),
 			NumVotes:      uint32(numVotes),
 		}
 
-		_, err = disk.WriteRecord(&record)
+		_, err = diskObject.WriteRecord(&record)
 		if err != nil {
 			panic("Loading interrupted, not enough disk storage! Consider increasing capacity of the virtual disk")
 		}
@@ -254,4 +260,35 @@ func BlockToRecords(block Block) ([]Record, []*byte) {
 
 	return records, pointers
 }
+// REVIEW after AddrToRecord,recordToBytes are implemented
+// Deletes record given address to record
+func (diskObject *disk) DeleteRecords(address *byte){
+	// retrieve recordLocationObj
+	recordLocationObject = diskObject.lookUpTable[address]
 
+	// retrieve block using block index
+	interestedBlock = diskObject.secondLevelIndex[recordLocationObject.blockIndex]
+
+	// retrieve recordObject
+	recordObject,err = AddrToRecord(address)
+	if err!=nil{
+		panic("Unable to delete record as recordObject could not be formed from address")
+	}
+
+	// set deleted flag to true
+	recordObject.deleted = true
+
+	// convert new recordObject
+	bytes,err = recordToBytes(recordObject)
+	if err!=nil{
+		panic("Unable to delete record as byte array could not be formed")
+	}
+
+	// copy back into block
+	copy(interestedBlock.recordValueArray[recordLocationObject.recordIndex*diskObject.recordSize],bytes)
+
+	// append to deletedArray
+	append(diskObject.deletedArray,recordLocation)
+
+	return true
+}
