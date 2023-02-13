@@ -8,6 +8,15 @@ import (
 	"os"
 	"strconv"
 )
+// 12/2/23
+// delieverables for indexing grp
+// func retrieveAll():
+//   return [[recordLocationObject1,numVotes1],[recordLocationObject2,numVotes2],........]
+// func retrieveRecord(recordLocationObject):
+// 	 return recordObject
+// func delete(recordLocationObject):
+// 	 return bool
+
 
 /*
 TO DO (ZON):
@@ -22,6 +31,7 @@ const (
 	tConstLength    = 10
 	avgRatingLength = 1
 )
+
 // included deletedArray and recordSize ben
 type disk struct {
 	capacity         uint8  //capacity in MB
@@ -30,7 +40,7 @@ type disk struct {
 	numBlocks        uint32 //num of blocks created
 	remainingBlocks  uint32 //num of blocks that can be created on disk
 	numRecords       uint32 //num of records inserted
-	secondLevelIndex []block
+	blockArray       []block // secondlevelindex 
 	lookUpTable      map[*byte]recordLocation // key: record address, value: block index
 	deletedArray     []*recordLocation //stores memory address of deleted record's recordLocation
 	recordSize       uint8 //record size in bytes
@@ -53,7 +63,6 @@ type record struct {
 type recordLocation struct {
 	blockIndex   uint32 //index of corresponding block
 	recordIndex  uint8  //index of record within corresponding block
-	recordLength uint8  // length of record in bytes
 }
 
 // Creates storage structure on disk with specified capacity and block size
@@ -262,9 +271,8 @@ func BlockToRecords(block Block) ([]Record, []*byte) {
 }
 // REVIEW after AddrToRecord,recordToBytes are implemented
 // Deletes record given address to record
-func (diskObject *disk) DeleteRecords(address *byte){
-	// retrieve recordLocationObj
-	recordLocationObject = diskObject.lookUpTable[address]
+// change the input from address to recordlocation
+func (diskObject *disk) DeleteRecords(recordLocationObject){
 
 	// retrieve block using block index
 	interestedBlock = diskObject.secondLevelIndex[recordLocationObject.blockIndex]
@@ -292,3 +300,4 @@ func (diskObject *disk) DeleteRecords(address *byte){
 
 	return true
 }
+
