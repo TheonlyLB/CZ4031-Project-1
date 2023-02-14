@@ -5,9 +5,11 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/grailbio/base/tsv"
 	"os"
 	"strconv"
 )
+
 // 12/2/23
 // delieverables for indexing grp
 // func retrieveAll():
@@ -17,52 +19,41 @@ import (
 // func delete(recordLocationObject):
 // 	 return bool
 
-
-/*
-TO DO (ZON):
-
-Functions:
-recordsToBytes
-bytesToRecords
-
-*/
-
 const (
-	tConstLength    = 10
-	avgRatingLength = 1
+	tConstLength        = 10
+	averageRatingLength = 1
+	numVotesLength      = 4
+	recordLength        = tConstLength + averageRatingLength + numVotesLength
 )
 
-// included deletedArray and recordSize ben
 type disk struct {
-	capacity         uint8  //capacity in MB
-	blockSize        uint8  //block size in bytes
-	blockIndex       uint32 //index of current block for insertion of next record
-	numBlocks        uint32 //num of blocks created
-	remainingBlocks  uint32 //num of blocks that can be created on disk
-	numRecords       uint32 //num of records inserted
-	blockArray       []block // secondlevelindex 
-	lookUpTable      map[*byte]recordLocation // key: record address, value: block index
-	deletedArray     []*recordLocation //stores memory address of deleted record's recordLocation
-	recordSize       uint8 //record size in bytes
+	capacity        uint8                    //capacity in MB
+	blockSize       uint8                    //block size in bytes
+	blockIndex      uint32                   //index of current block for insertion of next record
+	numBlocks       uint32                   //num of blocks created
+	remainingBlocks uint32                   //num of blocks that can be created on disk
+	numRecords      uint32                   //num of records inserted
+	blockArray      []block                  // secondlevelindex
+	lookUpTable     map[*byte]recordLocation // key: record address, value: block index
+	deletedArray    []*recordLocation        //stores memory address of deleted record's recordLocation
 }
-// revised block struct
-// included recordIndex ben
+
 type block struct {
-	recordIndex      uint16  // index of current record for insertion 
+	numRecord        uint8  //num of records in block
 	recordValueArray []byte //byte array storing record values
 }
-// included deleted bool ben
+
 type record struct {
-	// include a header for deleted bool
-	deleted       bool // true if deleted
-	tConst        [tConstLength]byte
+	tConst        []byte
+	numVotes      uint32 //4 bytes
+	deleted       bool   // true if deleted, 1 byte
 	averageRating uint8  //1 byte
-	numVotes      []byte //length not initialised
+
 }
 
 type recordLocation struct {
-	blockIndex   uint32 //index of corresponding block
-	recordIndex  uint8  //index of record within corresponding block
+	blockIndex  uint32 //index of corresponding block
+	recordIndex uint8  //index of record within corresponding block
 }
 
 // Creates storage structure on disk with specified capacity and block size
@@ -93,193 +84,168 @@ func createBlock(diskObject *disk) (uint32, error) {
 		block := block{
 			recordValueArray: make([]byte, diskObject.blockSize),
 		}
-		diskObject.secondLevelIndex = append(diskObject.secondLevelIndex, block)
+		diskObject.blockArray = append(diskObject.blockArray, block)
 		diskObject.blockIndex += 1
 		return diskObject.blockIndex - 1, nil
 	}
-
-}
-// Doesnt seem to be used, especially when there is already a writerecord that handles that creation
-// Pack fields of data tuple into record
-func createRecord(tConst string, averageRating float64, numVotes int64) record {
-
-	recordObject := record{}
-
-	// pack tConst field
-	// convert string to unicode
-	recordObject.tConst = tConst
-	// pack averageRating field
-	recordObject.averageRating = uint8(averageRating * 10)
-	// assign numvotes to instance of record
-	recordObject.numVotes = 
-	// //Assign variable length of numVotes field with Golang slice
-	// var numVotesLength int
-	// if numVotes <= 255 {
-	// 	numVotesLength = 1
-	// } else if 255 < numVotes && numVotes <= 65535 {
-	// 	numVotesLength = 2
-	// } else if 65535 < numVotes && numVotes <= 4294967295 {
-	// 	numVotesLength = 4
-	// }
-
-	numVotesSlice := make([]byte, numVotesLength)
-	// pack numVotes field
-	recordObject.numVotes = numVotesSlice
-
-	return recordObject
 }
 
-// TO BE TESTED
-// WriteRecord Write record into the virtual disk, with packing into bytes
-// Return the starting address of the record in the block, and error if any.
-func (diskObject *disk) WriteRecord(recordObject *record) (*byte, error) {
-
-	// Record validations
-	if recordObject.numVotes == 0 {
-		panic("numVotes can't be zero")
+// Read tsv file, load data tuples into records on disk
+func (diskObject *disk) loadData(filepath string) {
+	// open file
+	f, err := os.ReadFile(filepath)
+	if err != nil {
+		panic("Error opening file")
 	}
-	// REVIEW max value of tconst
-	if len([]rune(recordObject.tConst)) > TconstSize {
-		panic("tconst size is too long")
-	}
-	
-	if recordObject.averageRating > 3.4e+38 {
-		panic("averageRating is too big")
-	}
-	// calc blockCapacity using blockSize and recordSize
-	blockCapacity := diskObject.blockSize / (diskObject.recordSize + 2) // REVIEW 2 bytes for the block header
-	
-	// retrieve current block
-	currentBlock = diskObject.secondLevelIndex[diskObject.blockIndex]
-
-	// if current block has recordIndex > blockCapcity
-	if int(currentBlock.recordIndex)>=blockCapacity{
-		// REVIEW need to create block and should return the blockObject while allocated the memory
-		_, err := createBlock(&diskObject)
-		if err!=nil{
-			panic("Error in WriteRecord, unable to createBlock when block is full")
+	// read file
+	fmt.Println("Reading file....")
+	r := tsv.NewReader(bytes.NewReader(f))
+	tuples, err := r.ReadAll()
+	// iterate over data tuples
+	for _, tuple := range tuples[1:] {
+		// Parse fields of data tuple to access relevant values
+		tConst := tuple[0]
+		averageRating, err := strconv.ParseFloat(tuple[1], 32)
+		if err != nil {
+			panic("Failed to parse fields of data tuple")
 		}
-		currentBlock = diskObject.secondLevelIndex[diskObject.blockIndex]
+		numVotes, err := strconv.ParseInt(tuple[2], 10, 32)
+		if err != nil {
+			panic("Failed to parse fields of data tuple")
+		}
+		// create record from each tuple
+		_, err = diskObject.createRecord(tConst, averageRating, numVotes)
+		if err != nil {
+			panic("Insufficient disk storage.")
+		}
 	}
-	// currentblock is ready for us to insert record
+	fmt.Printf("%v\n records loaded into disk", len(tuples[1:]))
+}
 
-	// convert record to bytes to be stored
-	recordInBytes := RecordToBytes(record)
+// Pack fields of data tuple into record on disk, returns the starting address of the record in the block
+func (diskObject *disk) createRecord(tConst string, averageRating float64, numVotes int64) (*byte, error) {
+	recordObject := record{
+		tConst:   []byte(tConst),   // convert string to 10 unicode characters, 10 bytes
+		numVotes: uint32(numVotes), // numVotes values within range of uint32, 4 bytes
+		// initialise 'deleted' header, 2 bytes
+		averageRating: uint8(averageRating * 10), // averageRating * 10 so it can be stored as uint8, 1 byte
+
+	}
+
+	// calculate blockCapacity using blockSize and recordLength
+	blockCapacity := diskObject.blockSize / (recordLength + 2) // 2 bytes for the block header
+	// calculate index of current block
+	diskObject.blockIndex = diskObject.numBlocks - 1
+	// retrieve current block
+	currentBlock := diskObject.blockArray[diskObject.blockIndex]
+
+	// If current block is full
+	if currentBlock.numRecord >= blockCapacity {
+		// create new block
+		index, err := createBlock(diskObject)
+		if err != nil {
+			panic("Cannot create new block when current block is full")
+		}
+		// retrieve new block using its index, store as current block
+		currentBlock = diskObject.blockArray[index]
+	}
+	// convert record to bytes for storage(pack fields)
+	byteRecord := recordToBytes(recordObject)
 
 	// copy record into block
-	copy(currentBlock.recordValueArray[currentBlock.recordIndex*diskObject.recordSize],recordInBytes)
-	// retrieve recordAddress
-	recordAddress := &currentBlock.recordValueArray[currentBlock.recordIndex*diskObject.recordSize]
-	// update lookuptable from address to recordlocation object
-	diskObject.lookUpTable[recordAddress] = recordLocation{blockIndex: diskObject.blockIndex, recordIndex: int(currentBlock.recordIndex)}
+	copy(currentBlock.recordValueArray[currentBlock.numRecord*recordLength:], byteRecord)
+	// retrieve address of record on disk
+	recordAddress := &currentBlock.recordValueArray[currentBlock.numRecord*recordLength]
+	// update lookup table from address to recordLocation object
+	diskObject.lookUpTable[recordAddress] = recordLocation{blockIndex: diskObject.blockIndex, recordIndex: currentBlock.numRecord}
 
 	currentBlock.numRecord += 1
-	currentBlock.recordIndex+=1
+
 	return recordAddress, nil
 }
 
-// LoadRecords Load records from tsv file into disk
-// dir is the relative file path
-func (diskObject *disk) LoadRecords(dir string) {
-	fmt.Println("Loading records from file....")
-	// open file
-	f, err := os.ReadFile(dir)
-	if err != nil {
-		panic("Error opening data file")
-	}
+// Converts record object into bytes (packs fields)
+func recordToBytes(recordObject record) []byte {
+	var byteRecord []byte
+	// Pack tConst field
+	tConstBinary := make([]byte, tConstLength)
+	copy(tConstBinary, recordObject.tConst)
+	byteRecord = append(byteRecord, tConstBinary...)
 
-	r := tsv.NewReader(bytes.NewReader(f))
+	// Pack averageRating
+	byteRecord = append(byteRecord, recordObject.averageRating)
 
-	records, err := r.ReadAll()
+	// Pack numVotes
+	numVotesBinary := make([]byte, numVotesLength)
+	binary.BigEndian.PutUint32(numVotesBinary, recordObject.numVotes)
+	byteRecord = append(byteRecord, numVotesBinary...)
 
-	for _, rec := range records[1:] {
-
-
-		avgRating, err := strconv.ParseFloat(rec[1], 32)
-		if err != nil {
-			panic("avgRating can't fit into float32")
-		}
-
-		numVotes, err := strconv.ParseUint(rec[2], 10, 32)
-		if err != nil {
-			fmt.Printf("%v", rec[2])
-			panic("numVotes can't fit into int32")
-		}
-
-		recordObject := record{
-			Tconst:        rec[0],
-			AverageRating: float32(avgRating),
-			NumVotes:      uint32(numVotes),
-		}
-
-		_, err = diskObject.WriteRecord(&record)
-		if err != nil {
-			panic("Loading interrupted, not enough disk storage! Consider increasing capacity of the virtual disk")
-		}
-	}
-	fmt.Printf("Records loaded into virtal disk, total: %v\n", len(records[1:]))
+	return byteRecord
 }
 
-// Unpack record into data tuple
-func unpackRecord(bytes []byte) record {
-	// Unpack tconst
-	tconst := string(bytes[:tConstLength])
+// Converts bytes into record object (unpacks fields)
+func bytesToRecord(byteRecord []byte) record {
+	// Unpack tConst
+	tConst := byteRecord[:tConstLength]
 
 	// Unpack averageRating
-	avgRating := binary.BigEndian.Uint16(bytes[tConstLength : tConstLength+avgRatingLength])
-	avgRatingF := float32(avgRating) / 10
+	averageRatingArray := (byteRecord[tConstLength : tConstLength+averageRatingLength])
+	// To convert byte array to uint8, first convert to string, then to integer
+	averageRating, _ := strconv.Atoi(string(averageRatingArray))
 
 	// Unpack numVotes
-	numVotes := binary.BigEndian.Uint32(bytes[tConstLength+avgRatingLength:])
+	numVotes := binary.BigEndian.Uint32(byteRecord[tConstLength+averageRatingLength:])
 
 	recordObject := record{
-		tConst:        tconst,
-		averageRating: avgRatingF,
+		tConst:        tConst,
+		averageRating: uint8(averageRating),
 		numVotes:      numVotes,
 	}
 
 	return recordObject
 }
 
-// Finds record using its starting addr in a block
-func AddrToRecord(disk *VirtualDisk, addr *byte) Record {
-	loc, exist := disk.LuTable[addr]
+// Takes record address, returns record object
+func addressToRecord(diskObject *disk, recordAddress *byte) record {
+	location, exist := diskObject.lookUpTable[recordAddress]
 	if !exist {
-		errMsg := fmt.Sprintf("Record can't be located with addr: %v", addr)
+		errMsg := fmt.Sprintf("No record at address %v", recordAddress)
 		panic(errMsg)
 	}
 
-	blockOffset := loc.Index * RecordSize
-	bin := disk.Blocks[loc.BlockIndex].Content[blockOffset : blockOffset+RecordSize]
+	blockOffset := location.recordIndex * recordLength
+	// Retrieve corresponding byte record
+	byteRecord := diskObject.blockArray[location.blockIndex].recordValueArray[blockOffset : blockOffset+recordLength]
 
-	return BytesToRecord(bin)
+	return bytesToRecord(byteRecord)
 }
 
-// Finds record using its block
-func BlockToRecords(block Block) ([]Record, []*byte) {
-	var records []Record
-	var pointers []*byte
-	var record Record
+// Takes block object, returns array of stored records and array of pointers to stored records
+func blockToRecord(blockObject block) ([]record, []*byte) {
+	var recordArray []record
+	var pointerArray []*byte
+	var recordObject record
 
-	for i := 0; i < int(block.NumRecord); i++ {
-		record = BytesToRecord(block.Content[i*RecordSize : i*RecordSize+RecordSize])
-		records = append(records, record)
-		pointers = append(pointers, &block.Content[i*RecordSize])
+	for i := 0; i < int(blockObject.numRecord); i++ {
+		recordObject = bytesToRecord(blockObject.recordValueArray[i*recordLength : i*recordLength+recordLength])
+		recordArray = append(recordArray, recordObject)
+		pointerArray = append(pointerArray, &blockObject.recordValueArray[i*recordLength])
 	}
 
-	return records, pointers
+	return recordArray, pointerArray
 }
+
 // REVIEW after AddrToRecord,recordToBytes are implemented
 // Deletes record given address to record
 // change the input from address to recordlocation
-func (diskObject *disk) DeleteRecords(recordLocationObject){
+func (diskObject *disk) DeleteRecords(recordLocationObject) {
 
 	// retrieve block using block index
-	interestedBlock = diskObject.secondLevelIndex[recordLocationObject.blockIndex]
+	interestedBlock = diskObject.blockArray[recordLocationObject.blockIndex]
 
 	// retrieve recordObject
-	recordObject,err = AddrToRecord(address)
-	if err!=nil{
+	recordObject, err = AddrToRecord(address)
+	if err != nil {
 		panic("Unable to delete record as recordObject could not be formed from address")
 	}
 
@@ -287,17 +253,16 @@ func (diskObject *disk) DeleteRecords(recordLocationObject){
 	recordObject.deleted = true
 
 	// convert new recordObject
-	bytes,err = recordToBytes(recordObject)
-	if err!=nil{
+	bytes, err = recordToBytes(recordObject)
+	if err != nil {
 		panic("Unable to delete record as byte array could not be formed")
 	}
 
 	// copy back into block
-	copy(interestedBlock.recordValueArray[recordLocationObject.recordIndex*diskObject.recordSize],bytes)
+	copy(interestedBlock.recordValueArray[recordLocationObject.recordIndex*diskObject.recordSize], bytes)
 
 	// append to deletedArray
-	append(diskObject.deletedArray,recordLocation)
+	append(diskObject.deletedArray, recordLocation)
 
 	return true
 }
-
