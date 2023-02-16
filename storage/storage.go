@@ -253,7 +253,7 @@ func (diskObject *disk) retrieveRecord(recordLocationObject recordLocation) reco
 // REVIEW after AddrToRecord,recordToBytes are implemented
 // Deletes record given address to record
 // change the input from address to recordlocation
-func (diskObject *disk) deleteRecords(recordLocationObject recordLocation) {
+func (diskObject *disk) deleteRecord(recordLocationObject recordLocation) {
 
 	var interestedBlock block
 	var recordObject record
