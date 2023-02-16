@@ -27,18 +27,17 @@ const (
 	recordLength        = tConstLength + averageRatingLength + numVotesLength
 )
 
-
 type Disk struct {
-	Capacity        uint8                    //capacity in MB
-	BlockSize       uint8                    //block size in bytes
-	BlockIndex      uint32                   //index of current block for insertion of next record
-	NumBlocks       uint32                   //num of blocks created
-	RemainingBlocks uint32                   //num of blocks that can be created on disk
-	NumRecords      uint32                   //num of records inserted
-	BlockArray      []Block                  // secondlevelindex
-	LookUpTable     map[*byte]RecordLocation // key: record address, value: block index
-	DeletedArray    []*RecordLocation        //stores memory address of deleted record's recordLocation
-  RecordLocationArray []recordLocation     //array of recordLocations available
+	Capacity            uint8                    //capacity in MB
+	BlockSize           uint8                    //block size in bytes
+	BlockIndex          uint32                   //index of current block for insertion of next record
+	NumBlocks           uint32                   //num of blocks created
+	RemainingBlocks     uint32                   //num of blocks that can be created on disk
+	NumRecords          uint32                   //num of records inserted
+	BlockArray          []Block                  // secondlevelindex
+	LookUpTable         map[*byte]RecordLocation // key: record address, value: block index
+	DeletedArray        []RecordLocation         //stores memory address of deleted record's recordLocation
+	RecordLocationArray []RecordLocation         //array of recordLocations available
 }
 
 type Block struct {
@@ -160,12 +159,11 @@ func (diskObject *Disk) createRecord(tConst string, averageRating float64, numVo
 	// retrieve address of record on disk
 	recordAddress := &currentBlock.RecordValueArray[currentBlock.NumRecord*recordLength]
 	// update lookup table from address to recordLocation object
-	recordLocationObject := recordLocation{BlockIndex: diskObject.BlockIndex, RecordIndex: currentBlock.NumRecord}
+	recordLocationObject := RecordLocation{BlockIndex: diskObject.BlockIndex, RecordIndex: currentBlock.NumRecord}
 	diskObject.LookUpTable[recordAddress] = recordLocationObject
 	// store recordLocation in recordLocationArray
 	diskObject.RecordLocationArray = append(diskObject.RecordLocationArray, recordLocationObject)
 	currentBlock.NumRecord += 1
-
 
 	return recordAddress, nil
 }
@@ -242,13 +240,13 @@ func blockToRecord(blockObject Block) ([]Record, []*byte) {
 }
 
 // Takes in a recordLocation instance and returns the record corresponding to that recordLocation
-func (diskObject *disk) retrieveRecord(recordLocationObject recordLocation) record {
-	var interestedBlock block
-	var recordObject record
-	var recordArray []record
-	interestedBlock = diskObject.blockArray[recordLocationObject.blockIndex]
+func (diskObject *Disk) retrieveRecord(recordLocationObject RecordLocation) Record {
+	var interestedBlock Block
+	var recordObject Record
+	var recordArray []Record
+	interestedBlock = diskObject.BlockArray[recordLocationObject.BlockIndex]
 	recordArray, _ = blockToRecord(interestedBlock)
-	recordObject = recordArray[recordLocationObject.recordIndex]
+	recordObject = recordArray[recordLocationObject.RecordIndex]
 	return recordObject
 }
 
@@ -257,13 +255,11 @@ func (diskObject *disk) retrieveRecord(recordLocationObject recordLocation) reco
 // change the input from address to recordlocation
 func (diskObject *Disk) DeleteRecord(recordLocationObject RecordLocation) {
 
-
-	var interestedBlock block
-	var recordObject record
-	var recordArray []record
+	var recordObject Record
+	var recordArray []Record
 	var byteRecord []byte
 	// retrieve block using block index
-	interestedBlock := diskObject.BlockArray[recordLocationObj.BlockIndex]
+	interestedBlock := diskObject.BlockArray[recordLocationObject.BlockIndex]
 
 	// retrieve recordObject
 	// recordObject, err := addressToRecord(address)
@@ -271,30 +267,30 @@ func (diskObject *Disk) DeleteRecord(recordLocationObject RecordLocation) {
 	// 	panic("Unable to delete record as recordObject could not be formed from address")
 	// }
 	recordArray, _ = blockToRecord(interestedBlock)
-	recordObject = recordArray[recordLocationObject.recordIndex]
+	recordObject = recordArray[recordLocationObject.RecordIndex]
 
 	// set deleted flag to true
-	recordObject.deleted = true
+	recordObject.Deleted = true
 
 	// convert new recordObject
 	byteRecord = recordToBytes(recordObject)
 
 	// copy back into block
-	copy(interestedBlock.recordValueArray[recordLocationObject.recordIndex*recordLength:], byteRecord)
+	copy(interestedBlock.RecordValueArray[recordLocationObject.RecordIndex*recordLength:], byteRecord)
 
 	// append to deletedArray
-	diskObject.deletedArray = append(diskObject.deletedArray, recordLocationObject)
+	diskObject.DeletedArray = append(diskObject.DeletedArray, recordLocationObject)
 
 	// remove from recordLocationArray
-	for i := 0; i < int(len(diskObject.recordLocationArray)); i++ {
-		if diskObject.recordLocationArray[i] == recordLocationObject {
-			diskObject.recordLocationArray = append(diskObject.recordLocationArray[:i], diskObject.recordLocationArray[i+1:]...)
+	for i := 0; i < int(len(diskObject.RecordLocationArray)); i++ {
+		if diskObject.RecordLocationArray[i] == recordLocationObject {
+			diskObject.RecordLocationArray = append(diskObject.RecordLocationArray[:i], diskObject.RecordLocationArray[i+1:]...)
 		}
 	}
 
 	return
 }
 
-func (diskObject *disk) retrieveAll() []recordLocation {
-	return diskObject.recordLocationArray
+func (diskObject *Disk) retrieveAll() []RecordLocation {
+	return diskObject.RecordLocationArray
 }
