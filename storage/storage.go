@@ -27,6 +27,7 @@ const (
 	recordLength        = tConstLength + averageRatingLength + numVotesLength
 )
 
+
 type Disk struct {
 	Capacity        uint8                    //capacity in MB
 	BlockSize       uint8                    //block size in bytes
@@ -37,6 +38,7 @@ type Disk struct {
 	BlockArray      []Block                  // secondlevelindex
 	LookUpTable     map[*byte]RecordLocation // key: record address, value: block index
 	DeletedArray    []*RecordLocation        //stores memory address of deleted record's recordLocation
+  RecordLocationArray []recordLocation     //array of recordLocations available
 }
 
 type Block struct {
@@ -158,12 +160,12 @@ func (diskObject *Disk) createRecord(tConst string, averageRating float64, numVo
 	// retrieve address of record on disk
 	recordAddress := &currentBlock.RecordValueArray[currentBlock.NumRecord*recordLength]
 	// update lookup table from address to recordLocation object
-	diskObject.LookUpTable[recordAddress] = RecordLocation{
-		BlockIndex:  diskObject.BlockIndex,
-		RecordIndex: currentBlock.NumRecord,
-	}
-
+	recordLocationObject := recordLocation{BlockIndex: diskObject.BlockIndex, RecordIndex: currentBlock.NumRecord}
+	diskObject.LookUpTable[recordAddress] = recordLocationObject
+	// store recordLocation in recordLocationArray
+	diskObject.RecordLocationArray = append(diskObject.RecordLocationArray, recordLocationObject)
 	currentBlock.NumRecord += 1
+
 
 	return recordAddress, nil
 }
@@ -239,34 +241,60 @@ func blockToRecord(blockObject Block) ([]Record, []*byte) {
 	return recordArray, pointerArray
 }
 
+// Takes in a recordLocation instance and returns the record corresponding to that recordLocation
+func (diskObject *disk) retrieveRecord(recordLocationObject recordLocation) record {
+	var interestedBlock block
+	var recordObject record
+	var recordArray []record
+	interestedBlock = diskObject.blockArray[recordLocationObject.blockIndex]
+	recordArray, _ = blockToRecord(interestedBlock)
+	recordObject = recordArray[recordLocationObject.recordIndex]
+	return recordObject
+}
+
 // REVIEW after AddrToRecord,recordToBytes are implemented
 // Deletes record given address to record
 // change the input from address to recordlocation
-func (diskObject *Disk) DeleteRecords(recordLocationObj RecordLocation) {
+func (diskObject *Disk) DeleteRecord(recordLocationObject RecordLocation) {
 
+
+	var interestedBlock block
+	var recordObject record
+	var recordArray []record
+	var byteRecord []byte
 	// retrieve block using block index
 	interestedBlock := diskObject.BlockArray[recordLocationObj.BlockIndex]
 
 	// retrieve recordObject
-	recordObject, err = AddrToRecord(address)
-	if err != nil {
-		panic("Unable to delete record as recordObject could not be formed from address")
-	}
+	// recordObject, err := addressToRecord(address)
+	// if err != nil {
+	// 	panic("Unable to delete record as recordObject could not be formed from address")
+	// }
+	recordArray, _ = blockToRecord(interestedBlock)
+	recordObject = recordArray[recordLocationObject.recordIndex]
 
 	// set deleted flag to true
 	recordObject.deleted = true
 
 	// convert new recordObject
-	bytes, err = recordToBytes(recordObject)
-	if err != nil {
-		panic("Unable to delete record as byte array could not be formed")
-	}
+	byteRecord = recordToBytes(recordObject)
 
 	// copy back into block
-	copy(interestedBlock.recordValueArray[recordLocationObject.recordIndex*diskObject.recordSize], bytes)
+	copy(interestedBlock.recordValueArray[recordLocationObject.recordIndex*recordLength:], byteRecord)
 
 	// append to deletedArray
-	append(diskObject.deletedArray, recordLocation)
+	diskObject.deletedArray = append(diskObject.deletedArray, recordLocationObject)
 
-	return true
+	// remove from recordLocationArray
+	for i := 0; i < int(len(diskObject.recordLocationArray)); i++ {
+		if diskObject.recordLocationArray[i] == recordLocationObject {
+			diskObject.recordLocationArray = append(diskObject.recordLocationArray[:i], diskObject.recordLocationArray[i+1:]...)
+		}
+	}
+
+	return
+}
+
+func (diskObject *disk) retrieveAll() []recordLocation {
+	return diskObject.recordLocationArray
 }
