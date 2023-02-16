@@ -1,0 +1,11 @@
+Storage:
+Define disk, block, record, and record location structures
+Createdisk func to create virtual disk storage
+Createdisk calls createblock func to create blocks in disk storage
+LoadData func to read tsv file and load data tuples into disk as records
+LoadData calls CreateRecord func to pack fields of each data tuple (converts them into bytes) into a record in a block, 
+maps record address to block index, record index in lookup table, returns address of the record.
+
+Retrieval:
+RetrieveRecord func takes recordLocation instance, returns corresponding record
+RetrieveRecord calls BlockToRecord, which takes the block found from the block index in recordLocation, returns records in block and pointers to each record
