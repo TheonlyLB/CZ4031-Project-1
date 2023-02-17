@@ -57,7 +57,7 @@ type RecordLocation struct {
 	BlockIndex  uint32 //index of corresponding block
 	RecordIndex uint8  //index of record within corresponding block
 }
-
+// return object for retrieveall() which includes recordlocation and numvotes
 type RecordLocationNumVotes struct {
 	RdLoc RecordLocation
 	NumVotes uint32
