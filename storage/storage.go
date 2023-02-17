@@ -58,6 +58,11 @@ type RecordLocation struct {
 	RecordIndex uint8  //index of record within corresponding block
 }
 
+type RecordLocationNumVotes struct {
+	RdLoc RecordLocation
+	NumVotes uint32
+}
+
 // Creates storage structure on disk with specified capacity and block size
 func CreateDisk(capacity uint8, blockSize uint8) Disk {
 	diskObject := Disk{
@@ -287,6 +292,13 @@ func (diskObject *Disk) DeleteRecord(recordLocationObject RecordLocation) {
 	return
 }
 
-func (diskObject *Disk) RetrieveAll() []RecordLocation {
-	return diskObject.RecordLocationArray
+func (diskObject *Disk) RetrieveAll() []RecordLocationNumVotes {
+	var recrdLocArray = diskObject.RecordLocationArray
+	var res []RecordLocationNumVotes
+	for index:=0; index< int(len(recrdLocArray)); index++{
+		var recrdObj = diskObject.RetrieveRecord(recrdLocArray[index])
+		recrdLocNumVotes := RecordLocationNumVotes{RdLoc: recrdLocArray[index], NumVotes: recrdObj.NumVotes}
+		res = append(res,recrdLocNumVotes)
+	}
+	return res
 }
