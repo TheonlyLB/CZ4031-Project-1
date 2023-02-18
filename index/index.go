@@ -6,7 +6,7 @@ import (
 	"math"
 )
 
-func NewTree(order int) *BPTree {
+func NewTree() *BPTree {
 	return &BPTree{
 		Root: nil,
 	}
