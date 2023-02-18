@@ -248,10 +248,6 @@ func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) {
 }
 
 func (node *BPNode) isFull() bool {
-	if node.IsLeaf {
-		return len(node.Keys) >= MAX_NUM_KEYS
-	} else {
-		return len(node.KeyPtrs) >= MAX_NUM_KEYS+1
-	}
+	return len(node.Keys) >= MAX_NUM_KEYS
 
 }
