@@ -3,6 +3,7 @@ package index
 import (
 	"CZ4031_Project_1/storage"
 	"errors"
+	"fmt"
 	"math"
 )
 
@@ -19,7 +20,9 @@ func (tree *BPTree) CreateIndex() *BPTree {
 
 func (tree *BPTree) Insert(recordLoc *storage.RecordLocation, val uint32) {
 	// if no root, create leaf node -> insert record -> end
+
 	if tree.Root == nil {
+		fmt.Println("No existing root, create a new root")
 		leafNode := NewBPNode(true)
 		leafNode.Keys = append(leafNode.Keys, val)
 		recordPtr := &RecordLLNode{
@@ -32,6 +35,8 @@ func (tree *BPTree) Insert(recordLoc *storage.RecordLocation, val uint32) {
 		return
 	}
 
+	fmt.Println("Found existing root, perform Insert directly now...")
+
 	leafNode := tree.findLeaf(val)
 	leafNode.InsertValIntoLeaf(recordLoc, val)
 
@@ -41,6 +46,7 @@ func (tree *BPTree) findLeaf(key uint32) *BPNode {
 	currNode := tree.Root
 
 	for !currNode.IsLeaf {
+
 		foundChild := false
 		for keyIdx, keyVal := range currNode.Keys {
 			if key < keyVal {
@@ -53,6 +59,11 @@ func (tree *BPTree) findLeaf(key uint32) *BPNode {
 			currNode = currNode.KeyPtrs[len(currNode.Keys)]
 		}
 	}
+
+	fmt.Println("Node to be inserted to: ", currNode)
+	fmt.Println("Current Keys: ", currNode.Keys)
+	fmt.Println("Current KeysPtrs: ", currNode.KeyPtrs)
+
 	return currNode
 }
 

@@ -4,6 +4,7 @@ import (
 	"CZ4031_Project_1/index"
 	"CZ4031_Project_1/storage"
 	"encoding/json"
+	"fmt"
 	"testing"
 )
 
@@ -44,13 +45,35 @@ func initTree(nodes []*index.RecordLLNode) *index.BPTree {
 	return tree
 }
 
-
 func TestIndex(t *testing.T) {
-	// Write test here
+	fmt.Println("==============================================================================")
+	fmt.Println("Initializing mock tree....")
+	fmt.Println("")
+
 	testNodes := initRecordLLNodes()
 	tree := initTree(testNodes)
+	fmt.Println("testNodes", testNodes)
+	fmt.Println("First test Node", testNodes[0].RecordInfo)
+	fmt.Println("Initial Tree at", tree)
+	fmt.Println("Initial Root node", tree.Root)
+	fmt.Println(" \n----------------------------")
 
+	fmt.Println("Testing starts...")
+	fmt.Println("")
+	tree.Insert(testNodes[0].RecordInfo, 5)
+	tree.Insert(testNodes[1].RecordInfo, 6)
 	b, _ := json.Marshal(tree)
-	t.Logf("Tree: %v", string(b))
+	// fmt.Println(string(b))
+	tree_json := string(b)
+	fmt.Println(tree_json)
+	// for i := range string(b) {
+	// 	fmt.Println(i)
+	// }
+
+	fmt.Println("")
+	fmt.Println("Testing finished!!")
+
+	fmt.Println("==============================================================================")
+
 	return
 }
