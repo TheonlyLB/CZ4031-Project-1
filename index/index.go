@@ -82,8 +82,10 @@ func (node *BPNode) InsertValIntoLeaf(recordLoc *storage.RecordLocation, val uin
 	}
 
 	if !node.isFull() {
+		fmt.Println("...Current Node got space, insert directly! ")
 		node.insertIntoLeafWithoutSplitting(recordLoc, val)
 	} else {
+		fmt.Println("...Current Node is Full, insert with split ")
 		node.insertIntoLeafWithSplit(recordLoc, val)
 	}
 
@@ -161,11 +163,14 @@ func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, v
 	node.RecordPtrs = allRecordPtrs[int(numOfLeftKeys):]
 
 	if node.ParentNode == nil {
+		fmt.Println("No existing parent node for current node, create parent node now")
+
 		newParentNode.Keys = append(newParentNode.Keys, newRightNode.Keys[0])
 		newParentNode.KeyPtrs = append(newParentNode.KeyPtrs, node, newRightNode)
 		// return parent?
 	} else {
 		// insert newRightNode into parent
+		fmt.Println("Found existing parent node: ", node.ParentNode, "\nInsert to parent now")
 		node.ParentNode.insertKeyIntoParent(newRightNode)
 	}
 

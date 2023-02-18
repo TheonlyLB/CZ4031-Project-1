@@ -33,10 +33,12 @@ func initTree(nodes []*index.RecordLLNode) *index.BPTree {
 	leftChild := index.NewBPNode(true)
 	leftChild.Keys = []uint32{0, 1, 2}
 	leftChild.RecordPtrs = nodes[:3]
+	leftChild.ParentNode = parent
 
 	rightChild := index.NewBPNode(true)
 	rightChild.Keys = []uint32{3, 4}
 	rightChild.RecordPtrs = nodes[3:]
+	rightChild.ParentNode = parent
 
 	leftChild.Next = rightChild
 	parent.Keys = []uint32{rightChild.Keys[0]}
@@ -61,7 +63,14 @@ func TestIndex(t *testing.T) {
 	fmt.Println("Testing starts...")
 	fmt.Println("")
 	tree.Insert(testNodes[0].RecordInfo, 5)
+	fmt.Println("nInsert Finished for value 5! ")
+	fmt.Println(" \n##############################")
+
 	tree.Insert(testNodes[1].RecordInfo, 6)
+	fmt.Println("\nInsert Finished for value 6! ")
+
+	fmt.Println(" \n##############################")
+
 	b, _ := json.Marshal(tree)
 	// fmt.Println(string(b))
 	tree_json := string(b)
