@@ -153,24 +153,26 @@ func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, v
 	fmt.Println("All key list: ", allKeysList)
 	node.Keys = allKeysList[:int(numOfLeftKeys)]
 	node.RecordPtrs = allRecordPtrs[int(numOfLeftKeys):]
-	fmt.Println(node.Keys)
+	// fmt.Println(node.Keys)
 
 	/// update parent node for the new RightNode
 
 	oldParentNode := node.ParentNode
-	fmt.Println("\nOld parent node: ", oldParentNode)
+	fmt.Println("Old parent node: ", oldParentNode)
+	node.insertKeyIntoParent(newRightNode)
 
-	if !oldParentNode.isFull() {
-		fmt.Println("Old parent node is not full, can modify direcly")
-		node.ParentNode.Keys = append(node.ParentNode.Keys, newRightNode.Keys[0])
-		node.ParentNode.KeyPtrs = append(node.ParentNode.KeyPtrs, newRightNode)
-		node.ParentNode.RecordPtrs = append(node.ParentNode.RecordPtrs, newRightNode.RecordPtrs[0])
-		fmt.Println("\nUpdated parent node: ", node.ParentNode)
+	// if !oldParentNode.isFull() {
+	// 	// fmt.Println("Old parent node is not full, can modify direcly")
+	// 	// node.ParentNode.Keys = append(node.ParentNode.Keys, newRightNode.Keys[0])
+	// 	// node.ParentNode.KeyPtrs = append(node.ParentNode.KeyPtrs, newRightNode)
+	// 	// node.ParentNode.RecordPtrs = append(node.ParentNode.RecordPtrs, newRightNode.RecordPtrs[0])
+	// 	// fmt.Println("\nUpdated parent node: ", node.ParentNode)
+	// 	node.insertKeyIntoParent(newR)
 
-	} else {
-		fmt.Println("Old parent node is full, need to split the parent node")
-
-	}
+	// } else {
+	// 	fmt.Println("Old parent node is full, need to split the parent node")
+	// 	node.insertIntoParentWithSplit(newRightNode)
+	// }
 
 	node.Next = newRightNode
 	newRightNode.ParentNode = node.ParentNode
@@ -191,68 +193,101 @@ func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, v
 
 func (node *BPNode) insertKeyIntoParent(newNode *BPNode) {
 	// I think need to find index to insert again
-	newKey := newNode.Keys[0]
+	// newKey := newNode.Keys[0]
 
-	if !node.isFull() {
+	if !node.ParentNode.isFull() {
 		// Insert into parent without splitting
-		index := getInsertIndex(node.Keys, newKey)
-		var (
-			newKeyList    []uint32
-			newKeyPtrList []*BPNode
-		)
-		newKeyList = node.Keys[:index]
-		newKeyList = append(newKeyList, newKey)
-		newKeyList = append(newKeyList, node.Keys[index:]...)
-		node.Keys = newKeyList
+		fmt.Println("Old parent node is not full, can modify direcly")
+		node.ParentNode.Keys = append(node.ParentNode.Keys, newNode.Keys[0])
+		node.ParentNode.KeyPtrs = append(node.ParentNode.KeyPtrs, newNode)
+		node.ParentNode.RecordPtrs = append(node.ParentNode.RecordPtrs, newNode.RecordPtrs[0])
+		fmt.Println("Updated parent node: ", node.ParentNode)
+		// index := getInsertIndex(node.Keys, newKey)
+		// var (
+		// 	newKeyList    []uint32
+		// 	newKeyPtrList []*BPNode
+		// )
+		// newKeyList = node.Keys[:index]
+		// newKeyList = append(newKeyList, newKey)
+		// newKeyList = append(newKeyList, node.Keys[index:]...)
+		// node.Keys = newKeyList
 
-		newKeyPtrList = node.KeyPtrs[:index]
-		newKeyPtrList = append(newKeyPtrList, newNode)
-		newKeyPtrList = append(newKeyPtrList, node.KeyPtrs[index:]...)
-		node.KeyPtrs = newKeyPtrList
-		return // Need return anth?
+		// newKeyPtrList = node.KeyPtrs[:index]
+		// newKeyPtrList = append(newKeyPtrList, newNode)
+		// newKeyPtrList = append(newKeyPtrList, node.KeyPtrs[index:]...)
+		// node.KeyPtrs = newKeyPtrList
+		// return // Need return anth?
 	} else {
+		fmt.Println("Old parent node is full, need to split")
+		currentNode := node
+		node.insertKeyIntoParent(newNode)
+		for currentNode.ParentNode.isFull() {
+			newParent := currentNode.insertKeyIntoParent(newNode)
+			currentNode = currentNode.ParentNode
+			newNode = newParent
+		}
 
 	}
-
 }
 
-func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) {
-	key := insertNode.Keys[0]
-	index := getInsertIndex(node.Keys, key)
-
-	var (
-		allKeysList []uint32
-		allKeyPtrs  []*BPNode
-	)
-	allKeysList = node.Keys[:index]
-	allKeysList = append(allKeysList, key)
-	allKeysList = append(allKeysList, node.Keys[index:]...)
-
-	allKeyPtrs = node.KeyPtrs[:index]
-	allKeyPtrs = append(allKeyPtrs, insertNode)
-	allKeyPtrs = append(allKeyPtrs, node.KeyPtrs[index:]...)
-
+func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) *BPNode {
 	numOfLeftKeys := math.Ceil((float64(MAX_NUM_KEYS) + 1) / 2)
+	allKeys := node.ParentNode.Keys
+	allKeyPtrs := insertNode.ParentNode.KeyPtrs
+	allKeys = append(allKeys, insertNode.Keys[0])
+	allKeyPtrs = append(allKeyPtrs, insertNode.KeyPtrs[0])
 
-	// Current node will be made as the left node
-	newRightNode := NewBPNode(node.IsLeaf)
+	node.ParentNode.Keys = allKeys[:int(numOfLeftKeys)]
+	node.ParentNode.KeyPtrs = allKeyPtrs[:int(numOfLeftKeys)]
+
 	newParentNode := NewBPNode(false)
+	newParentNode.Keys = allKeys[int(numOfLeftKeys):]
+	newParentNode.KeyPtrs = allKeyPtrs[int(numOfLeftKeys):]
 
-	newRightNode.Keys = allKeysList[int(numOfLeftKeys):]
-	newRightNode.KeyPtrs = allKeyPtrs[int(numOfLeftKeys):]
+	node.ParentNode.Next = newParentNode
+	insertNode.ParentNode = newParentNode
 
-	node.Keys = allKeysList[:int(numOfLeftKeys)]
-	node.KeyPtrs = allKeyPtrs[int(numOfLeftKeys):]
+	return newParentNode
 
-	if node.ParentNode == nil {
-		newParentNode.Keys = append(newParentNode.Keys, newRightNode.Keys[0])
-		newParentNode.KeyPtrs = append(newParentNode.KeyPtrs, node, newRightNode)
-		// return parent?
-	} else {
-		// insert newRightNode into parent
-		node.ParentNode.insertKeyIntoParent(newRightNode)
-	}
 }
+
+// func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) {
+// 	key := insertNode.Keys[0]
+// 	index := getInsertIndex(node.Keys, key)
+
+// 	var (
+// 		allKeysList []uint32
+// 		allKeyPtrs  []*BPNode
+// 	)
+// 	allKeysList = node.Keys[:index]
+// 	allKeysList = append(allKeysList, key)
+// 	allKeysList = append(allKeysList, node.Keys[index:]...)
+
+// 	allKeyPtrs = node.KeyPtrs[:index]
+// 	allKeyPtrs = append(allKeyPtrs, insertNode)
+// 	allKeyPtrs = append(allKeyPtrs, node.KeyPtrs[index:]...)
+
+// 	numOfLeftKeys := math.Ceil((float64(MAX_NUM_KEYS) + 1) / 2)
+
+// 	// Current node will be made as the left node
+// 	newRightNode := NewBPNode(node.IsLeaf)
+// 	newParentNode := NewBPNode(false)
+
+// 	newRightNode.Keys = allKeysList[int(numOfLeftKeys):]
+// 	newRightNode.KeyPtrs = allKeyPtrs[int(numOfLeftKeys):]
+
+// 	node.Keys = allKeysList[:int(numOfLeftKeys)]
+// 	node.KeyPtrs = allKeyPtrs[int(numOfLeftKeys):]
+
+// 	if node.ParentNode == nil {
+// 		newParentNode.Keys = append(newParentNode.Keys, newRightNode.Keys[0])
+// 		newParentNode.KeyPtrs = append(newParentNode.KeyPtrs, node, newRightNode)
+// 		// return parent?
+// 	} else {
+// 		// insert newRightNode into parent
+// 		node.ParentNode.insertKeyIntoParent(newRightNode)
+// 	}
+// }
 
 func (node *BPNode) isFull() bool {
 	return len(node.Keys) >= MAX_NUM_KEYS
