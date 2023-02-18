@@ -70,14 +70,20 @@ func TestIndex(t *testing.T) {
 	fmt.Println(" \n##############################")
 
 	tree.Insert(testNodes[1].RecordInfo, 7)
-	fmt.Println("\nInsert Finished for value 6! ")
+
+	fmt.Println("\nInsert Finished for value 7! ")
 
 	fmt.Println(" \n##############################")
 
-	// tree.Insert(testNodes[2].RecordInfo, 2)
-	// fmt.Println("\nInsert Finished for value 6! ")
+	tree.Insert(testNodes[2].RecordInfo, 8)
+	fmt.Println("\nInsert Finished for value 8! ")
 
-	// fmt.Println(" \n##############################")
+	fmt.Println(" \n##############################")
+
+	tree.Insert(testNodes[3].RecordInfo, 9)
+	fmt.Println("\nInsert Finished for value 8! ")
+
+	fmt.Println(" \n##############################")
 	b, _ := json.Marshal(tree.Root)
 	fmt.Println(b)
 	fmt.Println("Root: ", tree.Root)
