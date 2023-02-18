@@ -139,7 +139,7 @@ func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, v
 
 	// Current node will be made as the left node
 	newRightNode := NewBPNode(node.IsLeaf)
-	newParentNode := NewBPNode(false)
+	// newParentNode := NewBPNode(false)
 
 	newRightNode.Next = node.Next
 	node.Next = newRightNode
@@ -150,15 +150,31 @@ func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, v
 	node.Keys = allKeysList[:int(numOfLeftKeys)]
 	node.RecordPtrs = allRecordPtrs[int(numOfLeftKeys):]
 
-	if node.ParentNode == nil {
-		newParentNode.Keys = append(newParentNode.Keys, newRightNode.Keys[0])
-		newParentNode.KeyPtrs = append(newParentNode.KeyPtrs, node, newRightNode)
-		// return parent?
-	} else {
-		// insert newRightNode into parent
-		node.ParentNode.insertKeyIntoParent(newRightNode)
-	}
+	oldParentNode := node.ParentNode
+	fmt.Println("\nOld parent node: ", oldParentNode)
 
+	if !oldParentNode.isFull() {
+		fmt.Println("Old parent node is not full, can modify direcly")
+		node.ParentNode.Keys = append(node.ParentNode.Keys, newRightNode.Keys[0])
+		node.ParentNode.KeyPtrs = append(node.ParentNode.KeyPtrs, newRightNode)
+		node.ParentNode.RecordPtrs = append(node.ParentNode.RecordPtrs, newRightNode.RecordPtrs[0])
+		fmt.Println("\nUpdated parent node: ", node.ParentNode)
+
+	} else {
+		fmt.Println("Old parent node is full, need to split the parent node")
+
+	}
+	// if newRightNode.ParentNode == nil {
+	// 	fmt.Println("\nNo existing parent node for the newly created node, create parent node now")
+
+	// 	newParentNode.Keys = append(newParentNode.Keys, newRightNode.Keys[0])
+	// 	newParentNode.KeyPtrs = append(newParentNode.KeyPtrs, node, newRightNode)
+	// 	// return parent?
+	// } else {
+	// 	// insert newRightNode into parent
+	// 	fmt.Println("Found existing parent node: ", node.ParentNode, "\nInsert to parent now")
+	// 	node.ParentNode.insertKeyIntoParent(newRightNode)
+	// }
 }
 
 func (node *BPNode) insertKeyIntoParent(newNode *BPNode) {
