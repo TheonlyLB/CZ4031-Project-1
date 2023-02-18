@@ -33,16 +33,17 @@ func initTree(nodes []*index.RecordLLNode) *index.BPTree {
 	leftChild := index.NewBPNode(true)
 	leftChild.Keys = []uint32{0, 1, 2}
 	leftChild.RecordPtrs = nodes[:3]
-	leftChild.ParentNode = parent
+	leftChild.ParentNode = tree.Root
 
 	rightChild := index.NewBPNode(true)
 	rightChild.Keys = []uint32{3, 4}
 	rightChild.RecordPtrs = nodes[3:]
-	rightChild.ParentNode = parent
+	rightChild.ParentNode = tree.Root
 
 	leftChild.Next = rightChild
 	parent.Keys = []uint32{rightChild.Keys[0]}
 	parent.KeyPtrs = []*index.BPNode{leftChild, rightChild}
+	fmt.Println(parent.KeyPtrs[0].Keys)
 
 	return tree
 }
@@ -58,6 +59,8 @@ func TestIndex(t *testing.T) {
 	fmt.Println("First test Node", testNodes[0].RecordInfo)
 	fmt.Println("Initial Tree at", tree)
 	fmt.Println("Initial Root node", tree.Root)
+	fmt.Println(tree.Root.KeyPtrs[0].Keys)
+
 	fmt.Println(" \n----------------------------")
 
 	fmt.Println("Testing starts...")
@@ -71,10 +74,23 @@ func TestIndex(t *testing.T) {
 
 	fmt.Println(" \n##############################")
 
-	b, _ := json.Marshal(tree)
-	// fmt.Println(string(b))
-	tree_json := string(b)
-	fmt.Println(tree_json)
+	b, _ := json.Marshal(tree.Root)
+	fmt.Println(b)
+	fmt.Println("Root: ", tree.Root)
+	fmt.Println("Root: ", tree.Root.Keys, tree.Root.KeyPtrs)
+	fmt.Println("Leafs (2nd Layer)")
+	for i := range tree.Root.Keys {
+		fmt.Println("      ", tree.Root.KeyPtrs[i].Keys)
+	}
+	fmt.Println(tree.Root.KeyPtrs[1].KeyPtrs)
+
+	// fmt.Println("Leafs (3rd Layer)")
+	// for i := range tree.Root.Keys {
+	// 	fmt.Println("      ", tree.Root.KeyPtrs[1].Keys[i])
+	// }
+
+	// tree_json := string(b)
+	// fmt.Println("new tree: ", tree_json)
 	// for i := range string(b) {
 	// 	fmt.Println(i)
 	// }
