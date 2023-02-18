@@ -3,6 +3,7 @@ package index
 import (
 	"CZ4031_Project_1/storage"
 	"errors"
+	"fmt"
 	"math"
 )
 
@@ -180,8 +181,9 @@ func (node *BPNode) insertKeyIntoParent(newNode *BPNode) {
 		newKeyPtrList = append(newKeyPtrList, newNode)
 		newKeyPtrList = append(newKeyPtrList, node.KeyPtrs[index:]...)
 		node.KeyPtrs = newKeyPtrList
-		return // Need return anth?
+		// return // Need return anth? dont think so
 	} else {
+		node.insertIntoParentWithSplit(newNode)
 
 	}
 
@@ -218,7 +220,8 @@ func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) {
 	if node.ParentNode == nil {
 		newParentNode.Keys = append(newParentNode.Keys, newRightNode.Keys[0])
 		newParentNode.KeyPtrs = append(newParentNode.KeyPtrs, node, newRightNode)
-		// return parent?
+		fmt.Println("New parent node created")
+		// return parent? dont think need return here
 	} else {
 		// insert newRightNode into parent
 		node.ParentNode.insertKeyIntoParent(newRightNode)
@@ -226,5 +229,10 @@ func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) {
 }
 
 func (node *BPNode) isFull() bool {
-	return len(node.Keys) >= MAX_NUM_KEYS
+	if node.IsLeaf {
+		return len(node.Keys) >= MAX_NUM_KEYS
+	} else {
+		return len(node.KeyPtrs) >= MAX_NUM_KEYS+1
+	}
+
 }
