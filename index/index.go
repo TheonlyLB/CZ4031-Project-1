@@ -160,6 +160,7 @@ func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, v
 	newRightNode.RecordPtrs = allRecordPtrs[int(numOfLeftKeys):]
 
 	fmt.Println("...updating current node info")
+	fmt.Println("All key list: ", allKeysList)
 	node.Keys = allKeysList[:int(numOfLeftKeys)]
 	node.RecordPtrs = allRecordPtrs[int(numOfLeftKeys):]
 	fmt.Println(node.Keys)
@@ -182,6 +183,7 @@ func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, v
 	}
 
 	node.Next = newRightNode
+	newRightNode.ParentNode = node.ParentNode
 
 	// if newRightNode.ParentNode == nil {
 	// 	fmt.Println("\nNo existing parent node for the newly created node, create parent node now")
