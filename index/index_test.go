@@ -8,11 +8,11 @@ import (
 	"testing"
 )
 
-const TEST_NUM = 5
+const TEST_NUM = 10
 
 func initRecordLLNodes() []*index.RecordLLNode {
 	tempLLNodes := make([]*index.RecordLLNode, 0)
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 10; i++ {
 		var r storage.RecordLocation
 		r.BlockIndex = uint32(i)
 		r.RecordIndex = uint8(i)
@@ -65,25 +65,17 @@ func TestIndex(t *testing.T) {
 
 	fmt.Println("Testing starts...")
 	fmt.Println("")
-	tree.Insert(testNodes[0].RecordInfo, 6)
-	fmt.Println("nInsert Finished for value 5! ")
-	fmt.Println(" \n##############################")
 
-	tree.Insert(testNodes[1].RecordInfo, 7)
+	for i := 0; i < 7; i++ {
 
-	fmt.Println("\nInsert Finished for value 7! ")
+		val := uint32(i + 5)
+		fmt.Println("Inserting value ", val)
+		fmt.Println("")
+		tree.Insert(testNodes[i].RecordInfo, val)
+		fmt.Println("\nInsert Finished for value ", val, "! ")
+		fmt.Println(" \n##############################")
 
-	fmt.Println(" \n##############################")
-
-	tree.Insert(testNodes[2].RecordInfo, 8)
-	fmt.Println("\nInsert Finished for value 8! ")
-
-	fmt.Println(" \n##############################")
-
-	tree.Insert(testNodes[3].RecordInfo, 9)
-	fmt.Println("\nInsert Finished for value 8! ")
-
-	fmt.Println(" \n##############################")
+	}
 	b, _ := json.Marshal(tree.Root)
 	fmt.Println(b)
 	fmt.Println("Root: ", tree.Root)
@@ -111,7 +103,6 @@ func TestIndex(t *testing.T) {
 
 	fmt.Println("")
 	fmt.Println("Testing finished!!")
-
 	fmt.Println("==============================================================================")
 
 	return
