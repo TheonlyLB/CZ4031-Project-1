@@ -34,12 +34,6 @@ func TestIndex(t *testing.T) {
 		fmt.Println("")
 		tree.Insert(testNodes[i].RecordInfo, val)
 		fmt.Println("\nInsert Finished for value ", val, "! ")
-		// fmt.Println("\nRoot: ", tree.Root)
-		// fmt.Println("Root: ", tree.Root.Keys)
-		// fmt.Println("Leafs (2nd Layer)")
-		// for i := range tree.Root.KeyPtrs {
-		// 	fmt.Println("      ", tree.Root.KeyPtrs[i].Keys)
-		// }
 		PrintTree(tree)
 		fmt.Println(" \n##############################")
 	}
@@ -47,50 +41,10 @@ func TestIndex(t *testing.T) {
 	/////////////////////////////////////////////////////////////
 	////// Final Tree
 	b, _ := json.Marshal(tree.Root)
-	// layer3 := false
-	// validnodes_l2 := make([]*index.BPNode, 0)
+
 	fmt.Println(string(b))
 	fmt.Println("Total number of test values: ", TEST_NUM)
 	PrintTree(tree)
-	// fmt.Println("Root: ", tree.Root)
-	// fmt.Println("Root: ", tree.Root.Keys)
-	// fmt.Println("Leafs (layer2)")
-	// for i := range tree.Root.KeyPtrs {
-	// 	fmt.Println("      ", tree.Root.KeyPtrs[i].Keys)
-	// 	tempNode := tree.Root.KeyPtrs[i]
-	// 	// fmt.Println("tempnode:", tempNode)
-	// 	if len(tempNode.KeyPtrs) > 0 {
-	// 		layer3 = true
-	// 		validnodes_l2 = append(validnodes_l2, tempNode)
-	// 	}
-	// }
-
-	// // fmt.Println(validnodes_l2)
-	// if layer3 {
-	// 	fmt.Println("Leafs (layer3)")
-	// 	for Idx := range validnodes_l2 {
-	// 		for i := range validnodes_l2[Idx].KeyPtrs {
-	// 			fmt.Println("      ", validnodes_l2[Idx].KeyPtrs[i].Keys)
-	// 		}
-	// 		fmt.Println("      ...........")
-	// 		// fmt.Println(node)
-
-	// 	}
-	// }
-	// fmt.Println(tree.Root.KeyPtrs)
-	// fmt.Println("Leafs (3rd Layer)")
-	// fmt.Println("      ", tree.Root.KeyPtrs[1].Next.Keys)
-
-	// fmt.Println("Leafs (3rd Layer)")
-	// for i := range tree.Root.Keys {
-	// 	fmt.Println("      ", tree.Root.KeyPtrs[1].Keys[i])
-	// }
-
-	// tree_json := string(b)
-	// fmt.Println("new tree: ", tree_json)
-	// for i := range string(b) {
-	// 	fmt.Println(i)
-	// }
 
 	fmt.Println("")
 	fmt.Println("Testing finished!!")
@@ -144,25 +98,18 @@ func PrintTree(tree *index.BPTree) {
 
 	layerNo := 0
 	nextLayer := true
-	fmt.Println("Root  (layer", layerNo, "): ", tree.Root.Keys)
+	fmt.Println("Root,  //layer", layerNo)
+	fmt.Println("        ", tree.Root.Keys)
 
 	tempParentNodeList := make([]*index.BPNode, 0)
 	tempParentNodeList = append(tempParentNodeList, tree.Root)
 	tempNodeWithChildList := make([]*index.BPNode, 0)
 	for nextLayer {
-		// tempParentNodeList := make([]*index.BPNode, 0)
-		// tempParentNodeList = append(tempParentNodeList, tree.Root)
-		// tempNodeWithChildList := make([]*index.BPNode, 0)
-		// tempNodeWithChildList = append(tempNodeWithChildList, tree.Root)
-
 		for i := range tempParentNodeList {
-			// fmt.Println(tempParentNodeList)
 			if len(tempParentNodeList[i].KeyPtrs) > 0 {
 				for j := range tempParentNodeList[i].KeyPtrs {
 					tempNodeWithChildList = append(tempNodeWithChildList, tempParentNodeList[i].KeyPtrs[j])
 				}
-				// tempNodeWithChildList = append(tempNodeWithChildList, tempParentNodeList[i])
-				// fmt.Println(tempNodeWithChildList)
 			} else {
 				nextLayer = false
 				break
@@ -170,54 +117,15 @@ func PrintTree(tree *index.BPTree) {
 			tempParentNodeList = tempNodeWithChildList
 
 			layerNo += 1
-			fmt.Println("Nodes (layer", layerNo, "): ")
+			fmt.Println("Nodes, //layer", layerNo, "")
 			for k := range tempParentNodeList {
-				fmt.Println("      ", tempParentNodeList[k].Keys)
-				// if len(tempParentNodeList) > 0 {
-				// 	tempParentNodeList = append(tempParentNodeList[1:])
-				// } else {
-				// 	tempParentNodeList = nil
-				// }
+				fmt.Println("        ", tempParentNodeList[k].Keys)
+
 			}
-			// fmt.Println(tempParentNodeList)
+
 			tempNodeWithChildList = nil
 
-			// if len(tempParentNodeList) > 0 {
-			// 	tempParentNodeList = append(tempParentNodeList[1:])
-			// } else {
-			// 	tempParentNodeList = nil
-			// }
-
-			// if len(tempParentNodeList[i].KeyPtrs) > 0 {
-			// 	tempNodeWithChildList = append(tempNodeWithChildList, tempParentNodeList[i])
-			// 	fmt.Println(tempNodeWithChildList)
-			// } else {
-			// 	nextLayer = false
-			// 	break
-			// }
 		}
-
-		// tempParentNodeList = tempNodeWithChildList
-
-		// tempNodeWithChildList = nil
-
-		// if len(tempParentNodeList[i].KeyPtrs) > 0 {
-
-		// 	tempNodeWithChildList = append(tempNodeWithChildList, tempParentNodeList[i])
-		// 	fmt.Println(tempNodeWithChildList)
-		// } else {
-		// 	nextLayer = false
-		// 	break
-		// }
-
-		// for i := range tempParentNode.KeyPtrs {
-		// 	fmt.Println("      ", tempParentNode.KeyPtrs[i].Keys)
-		// 	tempNode := tempParentNode.KeyPtrs[i]
-		// 	if len(tempNode.KeyPtrs) > 0 {
-		// 		layerNo += 1
-		// 	} else {
-		// 		continue
-		// 	}
 
 	}
 }
