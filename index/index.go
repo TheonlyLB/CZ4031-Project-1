@@ -34,7 +34,7 @@ func (tree *BPTree) Insert(recordLoc *storage.RecordLocation, val uint32) {
 
 	fmt.Println("Tree has existing root, perform Insert now...")
 
-	leafNode := tree.findLeaf(val)
+	leafNode := tree.findLeafFromTree(val)
 	newRoot := leafNode.InsertValIntoLeaf(recordLoc, val)
 	if newRoot != nil {
 		tree.Root = newRoot
@@ -42,25 +42,137 @@ func (tree *BPTree) Insert(recordLoc *storage.RecordLocation, val uint32) {
 
 }
 
-func (tree *BPTree) findLeaf(key uint32) *BPNode {
+func (tree *BPTree) findLeafFromTree(key uint32) *BPNode {
 	fmt.Println("\nFinding leaf to insert now...")
 	currNode := tree.Root
-
+	foundChild := false
 	for !currNode.IsLeaf {
-		foundChild := false
+		fmt.Println("Curretn Node", currNode)
 		for keyIdx, keyVal := range currNode.Keys {
+			fmt.Println("Debug 2")
 			if key < keyVal {
 				currNode = currNode.KeyPtrs[keyIdx]
-				foundChild = true
+				fmt.Println(currNode)
+				if currNode.IsLeaf {
+					fmt.Println("found")
+					foundChild = true
+				}
 				break
 			}
 		}
 		if !foundChild {
+			fmt.Println("Debug 3")
 			currNode = currNode.KeyPtrs[len(currNode.Keys)]
+			fmt.Println("2- current Node", currNode)
+
+			// fmt.Println("Debug 3.2")
 		}
 	}
+	// fmt.Println("Debug 4")
+
+	// fmt.Println("Debug 5")
+
+	fmt.Println("Node to be inserted to: ", currNode)
+	fmt.Println("Current Keys: ", currNode.Keys)
+	fmt.Println("Current KeysPtrs: ", currNode.KeyPtrs)
 	return currNode
 }
+
+// func (tree *BPTree) findLeafFromTree(key uint32) *BPNode {
+// 	fmt.Println("\nFinding leaf to insert now...")
+
+// 	currNode := tree.Root
+// 	foundChild := false
+// 	potentialLeaf := NewBPNode(false)
+// 	targetedLeaf := NewBPNode(false)
+// 	fmt.Println("Current node:", currNode)
+// 	for !currNode.IsLeaf {
+// 		for keyIdx, keyVal := range currNode.Keys {
+// 			fmt.Println("Debug1", keyIdx, keyVal, key)
+// 			fmt.Println(currNode.Keys)
+// 			if key < keyVal {
+// 				fmt.Println("Debug 2")
+// 				potentialLeaf = currNode.KeyPtrs[keyIdx]
+// 				if potentialLeaf.IsLeaf {
+// 					foundChild = true
+// 					targetedLeaf = potentialLeaf
+// 					break
+// 				}
+// 			} else {
+// 				fmt.Println("next")
+// 			}
+// 		}
+
+// 		if len(potentialLeaf.Keys) == 0 {
+// 			potentialLeaf = currNode.KeyPtrs[len(currNode.Keys)]
+// 			if potentialLeaf.IsLeaf {
+// 				foundChild = true
+// 			}
+// 		}
+// 		if !foundChild {
+// 			currNode = potentialLeaf
+// 			// fmt.Println("Current node:", currNode)
+
+// 			// targetedLeaf = potentialLeaf.findLeafFromNode(key)
+// 		}
+// 	}
+// 	fmt.Println("Node to be inserted to: ", currNode)
+// 	fmt.Println("Current Keys: ", currNode.Keys)
+// 	fmt.Println("Current KeysPtrs: ", currNode.KeyPtrs)
+// 	return targetedLeaf
+// }
+
+// foundChild := false
+// for keyIdx, keyVal := range currNode.Keys {
+// 	fmt.Println("Debug 2")
+// 	if key < keyVal {
+// 		currNode = currNode.KeyPtrs[keyIdx]
+// 		fmt.Println(currNode)
+// 		foundChild = true
+// 		break
+// 	}
+// }
+// if !foundChild {
+// 	fmt.Println("Debug 3")
+// 	currNode = currNode.KeyPtrs[len(currNode.Keys)]
+// 	fmt.Println("Debug 3.2")
+// }
+// fmt.Println("Debug 4")
+
+// fmt.Println("Debug 5")
+
+// fmt.Println("Node to be inserted to: ", currNode)
+// fmt.Println("Current Keys: ", currNode.Keys)
+// fmt.Println("Current KeysPtrs: ", currNode.KeyPtrs)
+
+// return currNode
+
+// func (node *BPNode) findLeafFromNode(key uint32) *BPNode {
+// 	/* Use this function when the existing tree has more than 1 layer
+// 	will return the targetted node from the base level (i.e., leaf node)
+// 	*/
+
+// 	fmt.Println("\nLocating base level leaf...")
+// 	foundChild := false
+// 	potentialLeaf := NewBPNode(false)
+// 	targetedLeaf := NewBPNode(false)
+
+// 	for keyIdx, keyVal := range node.Keys {
+// 		if key < keyVal {
+// 			potentialLeaf = node.KeyPtrs[keyIdx]
+// 			if potentialLeaf.IsLeaf {
+// 				foundChild = true
+// 				targetedLeaf = potentialLeaf
+// 				break
+// 			}
+// 		}
+// 	}
+// 	if !foundChild {
+// 		potentialLeaf.findLeafFromNode(key)
+// 	}
+
+// 	return targetedLeaf
+// }
 
 func (node *BPNode) InsertValIntoLeaf(recordLoc *storage.RecordLocation, val uint32) *BPNode {
 
