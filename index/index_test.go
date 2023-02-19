@@ -73,21 +73,50 @@ func TestIndex(t *testing.T) {
 		fmt.Println("")
 		tree.Insert(testNodes[i].RecordInfo, val)
 		fmt.Println("\nInsert Finished for value ", val, "! ")
+		fmt.Println("\nRoot: ", tree.Root)
+		fmt.Println("Root: ", tree.Root.Keys)
+		fmt.Println("Leafs (2nd Layer)")
+		for i := range tree.Root.KeyPtrs {
+			fmt.Println("      ", tree.Root.KeyPtrs[i].Keys)
+
+		}
+		// if
+
 		fmt.Println(" \n##############################")
 
 	}
+
 	b, _ := json.Marshal(tree.Root)
+	layer3 := false
+	validnodes_l2 := make([]*index.BPNode, 0)
 	fmt.Println(b)
 	fmt.Println("Root: ", tree.Root)
 	fmt.Println("Root: ", tree.Root.Keys)
 	fmt.Println("Leafs (2nd Layer)")
 	for i := range tree.Root.KeyPtrs {
-		// fmt.Println(i)
 		fmt.Println("      ", tree.Root.KeyPtrs[i].Keys)
+		tempNode := tree.Root.KeyPtrs[i]
+		// fmt.Println("tempnode:", tempNode)
+		if len(tempNode.KeyPtrs) > 0 {
+			layer3 = true
+			validnodes_l2 = append(validnodes_l2, tempNode)
+		}
+	}
+
+	// fmt.Println(validnodes_l2)
+	if layer3 {
+		fmt.Println("Leafs (3nd Layer)")
+		for Idx := range validnodes_l2 {
+			for i := range validnodes_l2[Idx].KeyPtrs {
+				fmt.Println("      ", validnodes_l2[Idx].KeyPtrs[i].Keys)
+			}
+			fmt.Println("      ...........")
+			// fmt.Println(node)
+
+		}
 	}
 	// fmt.Println(tree.Root.KeyPtrs)
-
-	fmt.Println("Leafs (3rd Layer)")
+	// fmt.Println("Leafs (3rd Layer)")
 	// fmt.Println("      ", tree.Root.KeyPtrs[1].Next.Keys)
 
 	// fmt.Println("Leafs (3rd Layer)")
