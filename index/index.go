@@ -96,13 +96,11 @@ func (node *BPNode) FindRoot() *BPNode {
 
 	tempNode := node
 	for tempNode.ParentNode != nil {
-		// fmt.Println(tempNode)
 		tempNode = node.ParentNode
 	}
 
 	rootNode := tempNode
 	fmt.Println("Current root is: ", rootNode)
-
 	return rootNode
 }
 
@@ -195,7 +193,8 @@ func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, v
 	fmt.Println("Old parent node: ", oldParentNode)
 	fmt.Println("\nFirst new Right Node", newRightNode)
 
-	rootNode := node.insertKeyIntoParent(newRightNode)
+	rootNode, tempReturn := node.insertKeyIntoParent(newRightNode)
+	fmt.Println(tempReturn)
 
 	return rootNode
 
@@ -226,25 +225,29 @@ func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, v
 
 }
 
-func (node *BPNode) insertKeyIntoParent(newNode *BPNode) *BPNode {
+func (node *BPNode) insertKeyIntoParent(newNode *BPNode) (*BPNode, bool) {
 	// I think need to find index to insert again
 	// newKey := newNode.Keys[0]
+	loopAgain := false
 	if node.ParentNode == nil {
-
+		loopAgain = false
+		fmt.Println(loopAgain)
 		fmt.Println("Old parent node was a root node, need to set a new root node and update tree")
 		newRoot := NewBPNode(false)
 		newRoot.Keys = []uint32{newNode.Keys[0]}
 		newRoot.KeyPtrs = []*BPNode{node, newNode}
-
 		node.ParentNode = newRoot
 		newNode.ParentNode = newRoot
-
-		return newRoot
+		return newRoot, loopAgain
 
 	} else if !node.ParentNode.isFull() {
+		loopAgain = false
+		fmt.Println(loopAgain)
+
 		// Insert into parent without splitting
 		fmt.Println("Old parent node is not full, can modify direcly")
 		newParent := node.insertIntoParentWithoutSplit(newNode)
+
 		// node.ParentNode.Keys = append(node.ParentNode.Keys, newNode.Keys[0])
 
 		// node.ParentNode.KeyPtrs = append(node.ParentNode.KeyPtrs, newNode)
@@ -265,27 +268,31 @@ func (node *BPNode) insertKeyIntoParent(newNode *BPNode) *BPNode {
 		// // newKeyPtrList = append(newKeyPtrList, node.KeyPtrs[index:]...)
 		// // node.KeyPtrs = newKeyPtrList
 		// // return // Need return anth?
-		return newParent
+		return newParent, loopAgain
 	} else {
+		loopAgain = true
+		fmt.Println(loopAgain)
+
 		fmt.Println("Old parent node is full, need to split")
 		currentNode := node
 		// currentNode.insertKeyIntoParent(newNode)
 		// currentNode.insertIntoParentWithSplit(newNode)
 		fmt.Println("currentNode: ", currentNode)
-		newParent := currentNode.insertIntoParentWithSplit(newNode)
-
-		// newParent := currentNode.insertKeyIntoParentWithSplit(newNode)
+		newAddedParent := currentNode.insertIntoParentWithSplit(newNode)
 		currentNode = currentNode.ParentNode
-		fmt.Println("New currentNode: ", currentNode)
+		newNode = newAddedParent
 
-		newNode = newParent
-		fmt.Println("-----")
-		fmt.Println("New curr: ", currentNode)
+		newParentTemp := NewBPNode(false)
+		for loopAgain {
+			fmt.Println("-----")
+			newParentTemp, loopAgain = currentNode.insertKeyIntoParent(newNode)
+			currentNode = currentNode.ParentNode
+			newNode = newParentTemp
+		}
 
-		fmt.Println("New newNode: ", newNode)
-		newParent = currentNode.insertKeyIntoParent(newNode)
-		fmt.Println("New parent2:  ", newNode)
-		return newParent
+		returnNode := newParentTemp
+
+		return returnNode, loopAgain
 
 	}
 }
