@@ -30,7 +30,7 @@ func TestIndex(t *testing.T) {
 	fmt.Println("")
 	for i := 0; i < TEST_NUM; i++ {
 		val := uint32(i + 5)
-		fmt.Println("(Test no.", i, "of", TEST_NUM, ")Inserting value ", val)
+		fmt.Println("(Test no.", i, "of", TEST_NUM, ") Inserting value ", val)
 		fmt.Println("")
 		tree.Insert(testNodes[i].RecordInfo, val)
 		fmt.Println("\nInsert Finished for value ", val, "! ")
@@ -105,27 +105,38 @@ func PrintTree(tree *index.BPTree) {
 	tempParentNodeList = append(tempParentNodeList, tree.Root)
 	tempNodeWithChildList := make([]*index.BPNode, 0)
 	for nextLayer {
+		// fmt.Println(tempParentNodeList)
 		for i := range tempParentNodeList {
+			// fmt.Println(i)
+			// fmt.Println("Lenth of list", len(tempParentNodeList))
+
+			// fmt.Println(tempParentNodeList[i].KeyPtrs)
 			if len(tempParentNodeList[i].KeyPtrs) > 0 {
 				for j := range tempParentNodeList[i].KeyPtrs {
 					tempNodeWithChildList = append(tempNodeWithChildList, tempParentNodeList[i].KeyPtrs[j])
 				}
-			} else {
-				nextLayer = false
-				break
 			}
-			tempParentNodeList = tempNodeWithChildList
-
-			layerNo += 1
-			fmt.Println("Nodes, //layer", layerNo, "")
-			for k := range tempParentNodeList {
-				fmt.Println("        ", tempParentNodeList[k].Keys)
-
-			}
-
-			tempNodeWithChildList = nil
-
+			// tempParentNodeList = tempNodeWithChildList
+			// if len(tempParentNodeList) == 0 {
+			// 	fmt.Println("break")
+			// 	nextLayer = false
+			// 	break
+			// }
 		}
+		if len(tempParentNodeList) == 0 {
+			// fmt.Println("break")
+			nextLayer = false
+			break
+		}
+		tempParentNodeList = tempNodeWithChildList
+
+		layerNo += 1
+		fmt.Println("Nodes, //layer", layerNo, "")
+		for k := range tempParentNodeList {
+			fmt.Println("        ", tempParentNodeList[k].Keys)
+		}
+
+		tempNodeWithChildList = nil
 
 	}
 }
