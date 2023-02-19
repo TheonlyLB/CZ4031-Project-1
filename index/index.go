@@ -456,7 +456,7 @@ func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) *BPNode {
 	fmt.Println("\nUpdated old parent", node.ParentNode)
 
 	newParentNode := NewBPNode(false)
-	newParentNode.Keys = allKeys[int(numOfLeftKeys):]
+	newParentNode.Keys = allKeys[int(numOfLeftKeys)+1:]
 	newParentNode.KeyPtrs = allKeyPtrs[int(numOfLeftKeys)+1:]
 	// newParentNode.ParentNode = node.ParentNode
 
