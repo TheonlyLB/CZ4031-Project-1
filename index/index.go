@@ -34,7 +34,7 @@ func (tree *BPTree) Insert(recordLoc *storage.RecordLocation, val uint32) {
 
 	}
 
-	fmt.Println("Found existing root, perform Insert directly now...")
+	fmt.Println("Tree has existing root, perform Insert now...")
 
 	leafNode := tree.findLeaf(val)
 	newRoot := leafNode.InsertValIntoLeaf(recordLoc, val)
@@ -45,6 +45,7 @@ func (tree *BPTree) Insert(recordLoc *storage.RecordLocation, val uint32) {
 }
 
 func (tree *BPTree) findLeaf(key uint32) *BPNode {
+	fmt.Println("\nFinding leaf to insert now...")
 	currNode := tree.Root
 
 	for !currNode.IsLeaf {
