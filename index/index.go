@@ -75,16 +75,35 @@ func (node *BPNode) InsertValIntoLeaf(recordLoc *storage.RecordLocation, val uin
 		}
 	}
 
+	root := NewBPNode(false)
+	returnNode := NewBPNode(false)
+
 	if !node.isFull() {
 		fmt.Println("\n...Current Node got space, insert directly! ")
-		newRoot := node.insertIntoLeafWithoutSplitting(recordLoc, val)
-		return newRoot
+		returnNode = node.insertIntoLeafWithoutSplitting(recordLoc, val)
 	} else {
 		fmt.Println("\n...Current Node is Full, insert with split ")
-		newRoot := node.insertIntoLeafWithSplit(recordLoc, val)
-		return newRoot
+		returnNode = node.insertIntoLeafWithSplit(recordLoc, val)
 	}
 
+	root = returnNode.FindRoot()
+
+	return root
+
+}
+func (node *BPNode) FindRoot() *BPNode {
+	fmt.Println("Finding root node..")
+
+	tempNode := node
+	for tempNode.ParentNode != nil {
+		// fmt.Println(tempNode)
+		tempNode = node.ParentNode
+	}
+
+	rootNode := tempNode
+	fmt.Println("Current root is: ", rootNode)
+
+	return rootNode
 }
 
 func getInsertIndex(keyList []uint32, val uint32) int {
@@ -123,15 +142,7 @@ func (node *BPNode) insertIntoLeafWithoutSplitting(recordLoc *storage.RecordLoca
 	newRecordPtrs = append(newRecordPtrs, node.RecordPtrs[index:]...)
 	node.RecordPtrs = newRecordPtrs
 
-	tempNode := node
-	for tempNode.ParentNode != nil {
-		tempNode = tempNode.ParentNode
-	}
-	rootNode := tempNode
-
-	fmt.Println("Final root node: ", rootNode)
-
-	return rootNode
+	return node
 }
 
 func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, val uint32) *BPNode {
@@ -261,7 +272,6 @@ func (node *BPNode) insertKeyIntoParent(newNode *BPNode) *BPNode {
 		// currentNode.insertKeyIntoParent(newNode)
 		// currentNode.insertIntoParentWithSplit(newNode)
 		fmt.Println("currentNode: ", currentNode)
-
 		newParent := currentNode.insertIntoParentWithSplit(newNode)
 
 		// newParent := currentNode.insertKeyIntoParentWithSplit(newNode)
@@ -269,7 +279,6 @@ func (node *BPNode) insertKeyIntoParent(newNode *BPNode) *BPNode {
 		fmt.Println("New currentNode: ", currentNode)
 
 		newNode = newParent
-
 		fmt.Println("-----")
 		fmt.Println("New curr: ", currentNode)
 
