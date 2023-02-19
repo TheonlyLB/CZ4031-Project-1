@@ -264,6 +264,168 @@ func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) {
 	}
 }
 
-func (node *BPNode) isFull() bool {
-	return len(node.Keys) >= MAX_NUM_KEYS
+func (tree *BPTree) Delete(key uint32) {
+	leafNode := tree.findLeaf(key)
+	leafNode.deleteKeyFromNode(key)
+
+	// If the leafNode is the root node, we need to check if the leafNode has any keys
+	if tree.Root == leafNode {
+		if len(leafNode.Keys) == 0 {
+			tree.Root = nil
+		}
+		return
+	}
+
+	leafNode.rebalance()
+}
+
+// helper function to remove node/addr/key into their slice at target index
+func deleteAtIndex[T *BPNode | *RecordLLNode | uint32](arr []T, target int) []T {
+	newArray := make([]T, 0)
+	for i, val := range arr {
+		if i == target {
+			continue
+		}
+		newArray = append(newArray, val)
+	}
+	return newArray
+}
+
+// Delete a key from node, and edit parent key if needed
+func (node *BPNode) deleteKeyFromNode(key uint32) {
+	var (
+		deleteIndex int = -1
+	)
+
+	for idx, k := range node.Keys {
+		if k == key {
+			deleteIndex = idx
+			break
+		}
+	}
+	// If deleteIndex == -1, means not found
+	if deleteIndex == -1 {
+		panic("Key does not exist, nothing to delete")
+	}
+	node.Keys = deleteAtIndex(node.Keys, deleteIndex)
+	if node.IsLeaf {
+		node.RecordPtrs = deleteAtIndex(node.RecordPtrs, deleteIndex)
+	} else {
+		// Delete index +1 because there is 1 more keyptr than key
+		node.KeyPtrs = deleteAtIndex(node.KeyPtrs, deleteIndex+1)
+	}
+
+	// If there is a parent node, and the index we delete is at 0, need update parent key
+	if node.ParentNode != nil && deleteIndex == 0 {
+		for i, k := range node.ParentNode.Keys {
+			if k == key {
+				node.ParentNode.Keys[i] = node.Keys[0]
+				break
+			}
+		}
+	}
+}
+
+// Rebalances the node by either borrowing from neighbours or merging with neighbours
+func (node *BPNode) rebalance() {
+	var threshold int
+	if node.IsLeaf {
+		threshold = int(math.Floor(float64(MAX_NUM_KEYS+1) / 2))
+	} else {
+		threshold = int(math.Floor(float64(MAX_NUM_KEYS) / 2))
+	}
+
+	// Enough keys
+	if len(node.Keys) >= threshold {
+		return
+	}
+
+	neighbour, isLeft, ok := canBorrowFromNeighbour(node, threshold)
+	if ok {
+		// Can borrow
+		node.BorrowKeyFromNode(neighbour, isLeft)
+	} else {
+		// Have to merge
+		node.Merge(neighbour)
+	}
+}
+
+func (node *BPNode) Merge(mergingNode *BPNode) {
+
+}
+
+// Transfers one key from borrowNode
+func (node *BPNode) BorrowKeyFromNode(borrowNode *BPNode, isLeft bool) {
+	numKeys := len(borrowNode.Keys)
+	var newKeys []uint32
+
+	if node.IsLeaf {
+		borrowKey := borrowNode.Keys[numKeys-1]
+		newKeys = append(newKeys, borrowKey)
+		node.Keys = append(newKeys, node.Keys...)
+		borrowNode.Keys = borrowNode.Keys[:numKeys-1]
+		// borrow recordptr
+		newRecordPtrs := []*RecordLLNode{borrowNode.RecordPtrs[numKeys-1]}
+		node.RecordPtrs = append(newRecordPtrs, node.RecordPtrs...)
+		borrowNode.RecordPtrs = borrowNode.RecordPtrs[:numKeys-1]
+	} else {
+		newFirst := node.KeyPtrs[0].Keys[0]
+		newKeys = append(newKeys, newFirst)
+		node.Keys = append(newKeys, node.Keys...)
+		borrowNode.Keys = borrowNode.Keys[:numKeys-1]
+		// borrow keyptr
+		newKeyPtrs := []*BPNode{borrowNode.KeyPtrs[numKeys]}
+		node.KeyPtrs = append(newKeyPtrs, node.KeyPtrs...)
+		borrowNode.KeyPtrs = borrowNode.KeyPtrs[:numKeys]
+	}
+
+	// Fix parents key
+	for i, keyPtr := range node.ParentNode.KeyPtrs {
+		if keyPtr == node {
+			if isLeft {
+				node.ParentNode.Keys[i-1] = node.Keys[0]
+				break
+			}
+		}
+	}
+}
+
+// ok - whether can borrow or not
+// isLeft - whether the node is left or right neighbour
+// neighbour - either left neighbour or right neighbour
+func canBorrowFromNeighbour(node *BPNode, threshold int) (neighbour *BPNode, isLeft bool, ok bool) {
+	parent := node.ParentNode
+	var leftNeighbour, rightNeighbour *BPNode
+
+	for i, keyPtr := range parent.KeyPtrs {
+		if keyPtr == node {
+			if i != 0 {
+				leftNeighbour = parent.KeyPtrs[i-1]
+				break
+			} else if i < len(parent.KeyPtrs)-1 {
+				rightNeighbour = parent.KeyPtrs[i+1]
+			}
+		}
+	}
+
+	// can borrow from left neighbour
+	if leftNeighbour != nil && len(leftNeighbour.Keys) > threshold {
+		neighbour = leftNeighbour
+		isLeft = true
+		ok = true
+		return
+	}
+	if rightNeighbour != nil && len(rightNeighbour.Keys) > threshold {
+		neighbour = rightNeighbour
+		isLeft = false
+		ok = true
+		return
+	}
+	ok = false
+	if leftNeighbour != nil {
+		neighbour = leftNeighbour
+	} else {
+		neighbour = rightNeighbour
+	}
+	return
 }

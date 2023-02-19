@@ -12,7 +12,7 @@ const TEST_NUM = 10
 
 func initRecordLLNodes() []*index.RecordLLNode {
 	tempLLNodes := make([]*index.RecordLLNode, 0)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < TEST_NUM; i++ {
 		var r storage.RecordLocation
 		r.BlockIndex = uint32(i)
 		r.RecordIndex = uint8(i)
@@ -106,4 +106,74 @@ func TestIndex(t *testing.T) {
 	fmt.Println("==============================================================================")
 
 	return
+}
+
+func TestBorrow(t *testing.T) {
+	llNodes := initRecordLLNodes()
+	// tree := initTree(llNodes)
+
+	// b, _ := json.Marshal(llNodes)
+	// t.Logf("nodes: %v", string(b))
+	// var n1KeyPtr, n2KeyPtr []*index.BPNode
+	// n1KeyPtr = append(n1KeyPtr, &index.BPNode{
+	// 	IsLeaf:     true,
+	// 	Keys:       []uint32{0, 1},
+	// 	RecordPtrs: []*index.RecordLLNode{llNodes[0], llNodes[1]},
+	// })
+	// n1KeyPtr = append(n1KeyPtr, &index.BPNode{
+	// 	IsLeaf:     true,
+	// 	Keys:       []uint32{2, 3},
+	// 	RecordPtrs: []*index.RecordLLNode{llNodes[2], llNodes[3]},
+	// })
+	// n1KeyPtr = append(n1KeyPtr, &index.BPNode{
+	// 	IsLeaf:     true,
+	// 	Keys:       []uint32{4},
+	// 	RecordPtrs: []*index.RecordLLNode{llNodes[4]},
+	// })
+
+	// node1 := &index.BPNode{
+	// 	IsLeaf: false,
+	// 	Keys:   []uint32{2, 4},
+	// 	// RecordPtrs: []*index.RecordLLNode{llNodes[3]},
+	// 	KeyPtrs: n1KeyPtr,
+	// }
+
+	// n2KeyPtr = append(n2KeyPtr, &index.BPNode{
+	// 	IsLeaf:     true,
+	// 	Keys:       []uint32{5},
+	// 	RecordPtrs: []*index.RecordLLNode{llNodes[5]},
+	// })
+
+	// n2KeyPtr = append(n2KeyPtr, &index.BPNode{
+	// 	IsLeaf:     true,
+	// 	Keys:       []uint32{6},
+	// 	RecordPtrs: []*index.RecordLLNode{llNodes[6]},
+	// })
+	// node2 := &index.BPNode{
+	// 	IsLeaf: false,
+	// 	Keys:   []uint32{6},
+	// 	// RecordPtrs: llNodes[:3],
+	// 	KeyPtrs: n2KeyPtr,
+	// }
+
+	// node2.BorrowKeyFromNode(node1)
+	// n1, _ := json.Marshal(node1)
+	// n2, _ := json.Marshal(node2)
+	// t.Logf("Node1: %v", string(n1))
+	// t.Logf("Node2: %v", string(n2))
+	leaf1 := &index.BPNode{
+		IsLeaf:     true,
+		Keys:       []uint32{2, 3},
+		RecordPtrs: []*index.RecordLLNode{llNodes[2], llNodes[3]},
+	}
+	leaf2 := &index.BPNode{
+		IsLeaf:     true,
+		Keys:       []uint32{4},
+		RecordPtrs: []*index.RecordLLNode{llNodes[4]},
+	}
+	leaf2.BorrowKeyFromNode(leaf1, true)
+	l1, _ := json.Marshal(leaf1)
+	l2, _ := json.Marshal(leaf2)
+	t.Logf("Leaf1: %v", string(l1))
+	t.Logf("Leaf2: %v", string(l2))
 }

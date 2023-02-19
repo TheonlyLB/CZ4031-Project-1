@@ -31,6 +31,10 @@ func NewBPNode(isLeaf bool) *BPNode {
 	}
 }
 
+func (node *BPNode) isFull() bool {
+	return len(node.Keys) >= MAX_NUM_KEYS
+}
+
 type RecordLLNode struct {
 	RecordInfo *storage.RecordLocation
 	Next       *RecordLLNode
