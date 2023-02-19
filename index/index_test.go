@@ -98,7 +98,7 @@ func PrintTree(tree *index.BPTree) {
 
 	layerNo := 0
 	nextLayer := true
-	fmt.Println("Root,  //layer", layerNo)
+	fmt.Println("\nRoot,  //layer", layerNo)
 	fmt.Println("        ", tree.Root.Keys)
 
 	tempParentNodeList := make([]*index.BPNode, 0)
@@ -129,13 +129,11 @@ func PrintTree(tree *index.BPTree) {
 			break
 		}
 		tempParentNodeList = tempNodeWithChildList
-
 		layerNo += 1
 		fmt.Println("Nodes, //layer", layerNo, "")
 		for k := range tempParentNodeList {
 			fmt.Println("        ", tempParentNodeList[k].Keys)
 		}
-
 		tempNodeWithChildList = nil
 
 	}
