@@ -2,7 +2,6 @@ package index
 
 import (
 	"CZ4031_Project_1/storage"
-	"errors"
 	"fmt"
 	"math"
 )
@@ -18,7 +17,7 @@ func (tree *BPTree) CreateIndex() *BPTree {
 	return &index
 }
 
-func (tree *BPTree) Insert(recordLoc *storage.RecordLocation, val uint32) *BPNode {
+func (tree *BPTree) Insert(recordLoc *storage.RecordLocation, val uint32) {
 	// if no root, create leaf node -> insert record -> end
 	if tree.Root == nil {
 		leafNode := NewBPNode(true)
@@ -30,13 +29,14 @@ func (tree *BPTree) Insert(recordLoc *storage.RecordLocation, val uint32) *BPNod
 
 		leafNode.RecordPtrs = append(leafNode.RecordPtrs, recordPtr)
 		tree.Root = leafNode
-		return
+
 	}
 
 	leafNode := tree.findLeaf(val)
-	newroot := leafNode.InsertValIntoLeaf(recordLoc, val)
-
-	tree.Root = newroot
+	newRoot := leafNode.InsertValIntoLeaf(recordLoc, val)
+	if newRoot != nil {
+		tree.Root = newRoot
+	}
 
 }
 
@@ -60,8 +60,10 @@ func (tree *BPTree) findLeaf(key uint32) *BPNode {
 }
 
 func (node *BPNode) InsertValIntoLeaf(recordLoc *storage.RecordLocation, val uint32) *BPNode {
+
 	if !node.IsLeaf {
-		return errors.New("[InsertValIntoLeaf] Node is not a leaf node")
+		// return errors.New("[InsertValIntoLeaf] Node is not a leaf node")
+		fmt.Println("Error: [InsertValIntoLeaf] Node is not a leaf node")
 	}
 
 	for i, key := range node.Keys {
@@ -75,13 +77,14 @@ func (node *BPNode) InsertValIntoLeaf(recordLoc *storage.RecordLocation, val uin
 
 	if !node.isFull() {
 		fmt.Println("\n...Current Node got space, insert directly! ")
-		node.insertIntoLeafWithoutSplitting(recordLoc, val)
+		newRoot := node.insertIntoLeafWithoutSplitting(recordLoc, val)
+		return newRoot
 	} else {
 		fmt.Println("\n...Current Node is Full, insert with split ")
-		node.insertIntoLeafWithSplit(recordLoc, val)
+		newRoot := node.insertIntoLeafWithSplit(recordLoc, val)
+		return newRoot
 	}
 
-	return nil
 }
 
 func getInsertIndex(keyList []uint32, val uint32) int {
@@ -100,7 +103,7 @@ func getInsertIndex(keyList []uint32, val uint32) int {
 	return insertIndex
 }
 
-func (node *BPNode) insertIntoLeafWithoutSplitting(recordLoc *storage.RecordLocation, val uint32) {
+func (node *BPNode) insertIntoLeafWithoutSplitting(recordLoc *storage.RecordLocation, val uint32) *BPNode {
 	index := getInsertIndex(node.Keys, val)
 	var (
 		newKeyList    []uint32
@@ -119,9 +122,19 @@ func (node *BPNode) insertIntoLeafWithoutSplitting(recordLoc *storage.RecordLoca
 	newRecordPtrs = append(newRecordPtrs, &newRecord)
 	newRecordPtrs = append(newRecordPtrs, node.RecordPtrs[index:]...)
 	node.RecordPtrs = newRecordPtrs
+
+	tempNode := node
+	for tempNode.ParentNode != nil {
+		tempNode = tempNode.ParentNode
+	}
+	rootNode := tempNode
+
+	fmt.Println("Final root node: ", rootNode)
+
+	return rootNode
 }
 
-func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, val uint32) {
+func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, val uint32) *BPNode {
 	index := getInsertIndex(node.Keys, val)
 	var (
 		allKeysList   []uint32
@@ -171,7 +184,9 @@ func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, v
 	fmt.Println("Old parent node: ", oldParentNode)
 	fmt.Println("\nFirst new Right Node", newRightNode)
 
-	node.insertKeyIntoParent(newRightNode)
+	rootNode := node.insertKeyIntoParent(newRightNode)
+
+	return rootNode
 
 	// if !oldParentNode.isFull() {
 	// 	// fmt.Println("Old parent node is not full, can modify direcly")
@@ -208,7 +223,7 @@ func (node *BPNode) insertKeyIntoParent(newNode *BPNode) *BPNode {
 		fmt.Println("Old parent node was a root node, need to set a new root node and update tree")
 		newRoot := NewBPNode(false)
 		newRoot.Keys = []uint32{newNode.Keys[0]}
-		newRoot.KeyPtrs = []*BPNode{node.ParentNode, newNode}
+		newRoot.KeyPtrs = []*BPNode{node, newNode}
 
 		node.ParentNode = newRoot
 		newNode.ParentNode = newRoot
