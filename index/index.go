@@ -47,23 +47,23 @@ func (tree *BPTree) findLeafFromTree(key uint32) *BPNode {
 	currNode := tree.Root
 	foundChild := false
 	for !currNode.IsLeaf {
-		fmt.Println("Curretn Node", currNode)
+		// fmt.Println("Curretn Node", currNode)
 		for keyIdx, keyVal := range currNode.Keys {
-			fmt.Println("Debug 2")
+			// fmt.Println("Debug 2")
 			if key < keyVal {
 				currNode = currNode.KeyPtrs[keyIdx]
 				fmt.Println(currNode)
 				if currNode.IsLeaf {
-					fmt.Println("found")
+					fmt.Println("found!")
 					foundChild = true
 				}
 				break
 			}
 		}
 		if !foundChild {
-			fmt.Println("Debug 3")
+			// fmt.Println("Debug 3")
 			currNode = currNode.KeyPtrs[len(currNode.Keys)]
-			fmt.Println("2- current Node", currNode)
+			// fmt.Println("2- current Node", currNode)
 
 			// fmt.Println("Debug 3.2")
 		}
@@ -195,6 +195,7 @@ func (node *BPNode) InsertValIntoLeaf(recordLoc *storage.RecordLocation, val uin
 
 	if !node.isFull() {
 		fmt.Println("\n...Current Node got space, insert directly! ")
+		fmt.Println("Current node", node)
 		returnNode = node.insertIntoLeafWithoutSplitting(recordLoc, val)
 	} else {
 		fmt.Println("\n...Current Node is Full, insert with split ")
@@ -208,10 +209,13 @@ func (node *BPNode) InsertValIntoLeaf(recordLoc *storage.RecordLocation, val uin
 }
 func (node *BPNode) FindRoot() *BPNode {
 	fmt.Println("Finding root node..")
+	fmt.Println(node)
+	fmt.Println(node.ParentNode)
 
 	tempNode := node
 	for tempNode.ParentNode != nil {
-		tempNode = node.ParentNode
+		tempNode = tempNode.ParentNode
+		// fmt.Println(tempNode)
 	}
 
 	rootNode := tempNode
@@ -399,7 +403,8 @@ func (node *BPNode) insertKeyIntoParent(newNode *BPNode) (*BPNode, bool) {
 
 		newParentTemp := NewBPNode(false)
 		for loopAgain {
-			fmt.Println("-----")
+
+			fmt.Println("-----loop")
 			newParentTemp, loopAgain = currentNode.insertKeyIntoParent(newNode)
 			currentNode = currentNode.ParentNode
 			newNode = newParentTemp
@@ -455,15 +460,15 @@ func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) *BPNode {
 	node.ParentNode.KeyPtrs = allKeyPtrs[:int(numOfLeftKeys)+1]
 	fmt.Println("\nUpdated old parent", node.ParentNode)
 
-	newParentNode := NewBPNode(false)
-	newParentNode.Keys = allKeys[int(numOfLeftKeys)+1:]
-	newParentNode.KeyPtrs = allKeyPtrs[int(numOfLeftKeys)+1:]
-	// newParentNode.ParentNode = node.ParentNode
+	newRightParentNode := NewBPNode(false)
+	newRightParentNode.Keys = allKeys[int(numOfLeftKeys)+1:]
+	newRightParentNode.KeyPtrs = allKeyPtrs[int(numOfLeftKeys)+1:]
+	newRightParentNode.ParentNode = node.ParentNode
 
-	node.ParentNode.Next = newParentNode
-	insertNode.ParentNode = newParentNode
+	node.ParentNode.Next = newRightParentNode
+	insertNode.ParentNode = newRightParentNode
 
-	return newParentNode
+	return newRightParentNode
 
 }
 
