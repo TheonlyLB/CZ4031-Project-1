@@ -266,29 +266,20 @@ func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) {
 
 func (tree *BPTree) Delete(key uint32) {
 	leafNode := tree.findLeaf(key)
-	leafNode.deleteKeyFromNode(key)
+	tree.deleteKey(leafNode, key)
 
-	// If the leafNode is the root node, we need to check if the leafNode has any keys
-	if tree.Root == leafNode {
-		if len(leafNode.Keys) == 0 {
+}
+
+func (tree *BPTree) deleteKey(node *BPNode, key uint32) {
+	node.deleteKeyFromNode(key)
+	// // If the leafNode is the root node, we need to check if the leafNode has any keys
+	if tree.Root == node {
+		if len(node.Keys) == 0 {
 			tree.Root = nil
 		}
 		return
 	}
-
-	leafNode.rebalance()
-}
-
-// helper function to remove node/addr/key into their slice at target index
-func deleteAtIndex[T *BPNode | *RecordLLNode | uint32](arr []T, target int) []T {
-	newArray := make([]T, 0)
-	for i, val := range arr {
-		if i == target {
-			continue
-		}
-		newArray = append(newArray, val)
-	}
-	return newArray
+	node.rebalance()
 }
 
 // Delete a key from node, and edit parent key if needed
@@ -326,6 +317,8 @@ func (node *BPNode) deleteKeyFromNode(key uint32) {
 	}
 }
 
+
+
 // Rebalances the node by either borrowing from neighbours or merging with neighbours
 func (node *BPNode) rebalance() {
 	var threshold int
@@ -346,48 +339,124 @@ func (node *BPNode) rebalance() {
 		node.BorrowKeyFromNode(neighbour, isLeft)
 	} else {
 		// Have to merge
-		node.Merge(neighbour)
+		node.Merge(neighbour, isLeft)
 	}
 }
 
-func (node *BPNode) Merge(mergingNode *BPNode) {
+func (node *BPNode) Merge(mergeIntoNode *BPNode, isLeft bool) {
+	tempKeys := make([]uint32, len(node.Keys))
+	mergeIntoKeyLen := len(mergeIntoNode.Keys)
+	nodeKeyLen := len(node.Keys)
+	if node.IsLeaf {
+		tempPtrs := make([]*RecordLLNode, len(node.RecordPtrs))
+		if isLeft {
+			copy(tempKeys[:mergeIntoKeyLen], mergeIntoNode.Keys[:mergeIntoKeyLen])
+			copy(tempKeys[mergeIntoKeyLen:], node.Keys)
 
+			copy(tempPtrs[:mergeIntoKeyLen], mergeIntoNode.RecordPtrs[:mergeIntoKeyLen])
+			copy(tempPtrs[mergeIntoKeyLen:], node.RecordPtrs)
+
+			// Fix next pointer
+			for _, item := range node.ParentNode.KeyPtrs {
+				if item == nil {
+					break
+				}
+
+				if item.Next == mergeIntoNode {
+					item.Next = node
+					break
+				}
+			}
+		} else {
+			copy(tempKeys[:nodeKeyLen], node.Keys[:nodeKeyLen])
+			copy(tempKeys[mergeIntoKeyLen:], mergeIntoNode.Keys[:mergeIntoKeyLen])
+			copy(tempPtrs[:nodeKeyLen], node.RecordPtrs[:nodeKeyLen])
+			copy(tempPtrs[mergeIntoKeyLen:], mergeIntoNode.RecordPtrs[:mergeIntoKeyLen])
+			node.Next = mergeIntoNode.Next
+		}
+
+		node.Keys = tempKeys
+		node.RecordPtrs = tempPtrs
+
+		var deleteKey uint32
+		for i, item := range mergeIntoNode.ParentNode.KeyPtrs {
+			if item == mergeIntoNode {
+				if isLeft {
+					deleteKey = mergeIntoNode.ParentNode.Keys[i]
+					node.ParentNode.KeyPtrs[i] = node
+				} else {
+					deleteKey = mergeIntoNode.ParentNode.Keys[i-1]
+					node.ParentNode.KeyPtrs[i] = node
+				}
+			}
+		}
+
+		mergeIntoNode.ParentNode.deleteKeyFromNode(deleteKey)
+	}
 }
 
 // Transfers one key from borrowNode
 func (node *BPNode) BorrowKeyFromNode(borrowNode *BPNode, isLeft bool) {
-	numKeys := len(borrowNode.Keys)
-	var newKeys []uint32
+	var (
+		insertIndex          int
+		removeIndex          int
+		parentKey            uint32
+		parentReplacementKey uint32
+	)
 
-	if node.IsLeaf {
-		borrowKey := borrowNode.Keys[numKeys-1]
-		newKeys = append(newKeys, borrowKey)
-		node.Keys = append(newKeys, node.Keys...)
-		borrowNode.Keys = borrowNode.Keys[:numKeys-1]
-		// borrow recordptr
-		newRecordPtrs := []*RecordLLNode{borrowNode.RecordPtrs[numKeys-1]}
-		node.RecordPtrs = append(newRecordPtrs, node.RecordPtrs...)
-		borrowNode.RecordPtrs = borrowNode.RecordPtrs[:numKeys-1]
+	if isLeft {
+		// Last item of borrowNode becomes first item of node
+		insertIndex = 0
+		removeIndex = len(borrowNode.Keys) - 1
+		parentKey = node.Keys[0]
+		parentReplacementKey = borrowNode.Keys[len(borrowNode.Keys)-1]
+
 	} else {
-		newFirst := node.KeyPtrs[0].Keys[0]
-		newKeys = append(newKeys, newFirst)
-		node.Keys = append(newKeys, node.Keys...)
-		borrowNode.Keys = borrowNode.Keys[:numKeys-1]
-		// borrow keyptr
-		newKeyPtrs := []*BPNode{borrowNode.KeyPtrs[numKeys]}
-		node.KeyPtrs = append(newKeyPtrs, node.KeyPtrs...)
-		borrowNode.KeyPtrs = borrowNode.KeyPtrs[:numKeys]
+		// First item of borrowNode becomes last item of node
+		insertIndex = len(node.Keys) - 1
+		removeIndex = 0
+		parentKey = borrowNode.Keys[0]
+		parentReplacementKey = borrowNode.Keys[1]
 	}
 
-	// Fix parents key
-	for i, keyPtr := range node.ParentNode.KeyPtrs {
-		if keyPtr == node {
-			if isLeft {
-				node.ParentNode.Keys[i-1] = node.Keys[0]
+	node.Keys = insertAtIndex(node.Keys, borrowNode.Keys[removeIndex], insertIndex)
+	borrowNode.Keys = deleteAtIndex(borrowNode.Keys, removeIndex)
+
+	if node.IsLeaf {
+		node.RecordPtrs = insertAtIndex(node.RecordPtrs, borrowNode.RecordPtrs[removeIndex], insertIndex)
+		borrowNode.RecordPtrs = deleteAtIndex(borrowNode.RecordPtrs, removeIndex)
+
+		for i, k := range node.ParentNode.Keys {
+			if k == parentKey {
+				node.ParentNode.Keys[i] = parentReplacementKey
+				break
+			}
+		}
+	} else {
+		if isLeft {
+			node.KeyPtrs = insertAtIndex(node.KeyPtrs, borrowNode.KeyPtrs[removeIndex+1], insertIndex)
+		} else {
+			node.KeyPtrs = insertAtIndex(node.KeyPtrs, borrowNode.KeyPtrs[removeIndex+1], insertIndex+1)
+		}
+		borrowNode.KeyPtrs = deleteAtIndex(borrowNode.KeyPtrs, removeIndex+1)
+
+		//Fix parent's key
+		for i, k := range node.ParentNode.KeyPtrs {
+			if k == node {
+				if isLeft {
+					temp := node.ParentNode.Keys[i-1]
+					node.ParentNode.Keys[i-1] = parentReplacementKey
+					node.Keys[0] = temp
+				} else {
+					temp := node.ParentNode.Keys[i]
+					node.ParentNode.Keys[i] = parentReplacementKey
+					node.Keys[len(node.Keys)-1] = temp
+				}
 				break
 			}
 		}
 	}
+
 }
 
 // ok - whether can borrow or not
@@ -408,24 +477,54 @@ func canBorrowFromNeighbour(node *BPNode, threshold int) (neighbour *BPNode, isL
 		}
 	}
 
-	// can borrow from left neighbour
-	if leftNeighbour != nil && len(leftNeighbour.Keys) > threshold {
-		neighbour = leftNeighbour
-		isLeft = true
-		ok = true
-		return
-	}
-	if rightNeighbour != nil && len(rightNeighbour.Keys) > threshold {
-		neighbour = rightNeighbour
-		isLeft = false
-		ok = true
-		return
-	}
-	ok = false
+	// not leftmost
 	if leftNeighbour != nil {
 		neighbour = leftNeighbour
-	} else {
-		neighbour = rightNeighbour
+		isLeft = true
+
+		if len(leftNeighbour.Keys) > threshold {
+			// can borrow from left neighbour
+			ok = true
+			return
+		}
 	}
+
+	// not rightmost
+	if rightNeighbour != nil {
+		neighbour = rightNeighbour
+		isLeft = false
+
+		if len(rightNeighbour.Keys) > threshold {
+			ok = true
+			return
+		}
+	}
+	ok = false
+	// if cannot borrow, neighbour will be rightnode
 	return
+}
+
+// helper function to remove node/addr/key into their slice at target index
+func deleteAtIndex[T *BPNode | *RecordLLNode | uint32](arr []T, target int) []T {
+	newArray := make([]T, 0)
+	for i, val := range arr {
+		if i == target {
+			continue
+		}
+		newArray = append(newArray, val)
+	}
+	return newArray
+}
+
+// helper function to insert node/addr/key into their slice at target index
+func insertAtIndex[T *BPNode | *RecordLLNode | uint32](arr []T, value T, target int) []T {
+	newArray := make([]T, 0)
+	// Shift 1 position down the array
+	for i, val := range arr {
+		if i == target {
+			newArray = append(newArray, value)
+		}
+		newArray = append(newArray, val)
+	}
+	return newArray
 }

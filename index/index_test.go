@@ -161,19 +161,27 @@ func TestBorrow(t *testing.T) {
 	// n2, _ := json.Marshal(node2)
 	// t.Logf("Node1: %v", string(n1))
 	// t.Logf("Node2: %v", string(n2))
+	parent := &index.BPNode{
+		IsLeaf: false,
+	}
 	leaf1 := &index.BPNode{
 		IsLeaf:     true,
 		Keys:       []uint32{2, 3},
 		RecordPtrs: []*index.RecordLLNode{llNodes[2], llNodes[3]},
+		ParentNode: parent,
 	}
 	leaf2 := &index.BPNode{
 		IsLeaf:     true,
 		Keys:       []uint32{4},
 		RecordPtrs: []*index.RecordLLNode{llNodes[4]},
+		ParentNode: parent,
 	}
+	parent.Keys = []uint32{4}
+	parent.KeyPtrs = []*index.BPNode{leaf1, leaf2}
+
 	leaf2.BorrowKeyFromNode(leaf1, true)
-	l1, _ := json.Marshal(leaf1)
-	l2, _ := json.Marshal(leaf2)
-	t.Logf("Leaf1: %v", string(l1))
-	t.Logf("Leaf2: %v", string(l2))
+	leaf1.ParentNode = nil
+	leaf2.ParentNode = nil
+	p, _ := json.Marshal(parent)
+	t.Logf("parent: %v", string(p))
 }
