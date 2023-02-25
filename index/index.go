@@ -323,12 +323,17 @@ func (tree *BPTree) deleteKey(node *BPNode, key uint32) {
 	node.deleteKeyFromNode(key)
 	// // If the leafNode is the root node, we need to check if the leafNode has any keys
 	if tree.Root == node {
-		if len(node.Keys) == 0 {
+		keyLen := len(node.Keys)
+		if keyLen == 0 && node.IsLeaf {
 			tree.Root = nil
+		} else if keyLen == 0 && !node.IsLeaf {
+			tree.Root = node.KeyPtrs[0]
+			tree.Root.ParentNode = nil
+			node.ParentNode = nil
 		}
 		return
 	}
-	node.rebalance()
+	tree.rebalance(node)
 }
 
 // Delete a key from node, and edit parent key if needed
@@ -367,7 +372,7 @@ func (node *BPNode) deleteKeyFromNode(key uint32) {
 }
 
 // Rebalances the node by either borrowing from neighbours or merging with neighbours
-func (node *BPNode) rebalance() {
+func (tree *BPTree) rebalance(node *BPNode) {
 	var threshold int
 	if node.IsLeaf {
 		threshold = int(math.Floor(float64(MAX_NUM_KEYS+1) / 2))
@@ -386,11 +391,11 @@ func (node *BPNode) rebalance() {
 		node.BorrowKeyFromNode(neighbour, isLeft)
 	} else {
 		// Have to merge
-		node.Merge(neighbour, isLeft)
+		tree.Merge(node, neighbour, isLeft)
 	}
 }
 
-func (node *BPNode) Merge(mergeIntoNode *BPNode, isLeft bool) {
+func (tree *BPTree) Merge(node *BPNode, mergeIntoNode *BPNode, isLeft bool) {
 	tempKeys := make([]uint32, len(node.Keys))
 	mergeIntoKeyLen := len(mergeIntoNode.Keys)
 	nodeKeyLen := len(node.Keys)
@@ -438,7 +443,7 @@ func (node *BPNode) Merge(mergeIntoNode *BPNode, isLeft bool) {
 			}
 		}
 
-		mergeIntoNode.ParentNode.deleteKeyFromNode(deleteKey)
+		tree.deleteKey(mergeIntoNode.ParentNode, deleteKey)
 	}
 }
 
