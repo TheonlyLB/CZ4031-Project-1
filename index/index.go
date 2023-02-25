@@ -19,9 +19,7 @@ func (tree *BPTree) CreateIndex() *BPTree {
 
 func (tree *BPTree) Insert(recordLoc *storage.RecordLocation, val uint32) {
 	// if no root, create leaf node -> insert record -> end
-
 	if tree.Root == nil {
-		fmt.Println("No existing root, create a new root")
 		leafNode := NewBPNode(true)
 		leafNode.Keys = append(leafNode.Keys, val)
 		recordPtr := &RecordLLNode{
@@ -31,7 +29,6 @@ func (tree *BPTree) Insert(recordLoc *storage.RecordLocation, val uint32) {
 
 		leafNode.RecordPtrs = append(leafNode.RecordPtrs, recordPtr)
 		tree.Root = leafNode
-
 	}
 
 	fmt.Println("Tree has existing root, perform Insert now...")
@@ -80,102 +77,6 @@ func (tree *BPTree) findLeafFromTree(key uint32) *BPNode {
 	return currNode
 }
 
-// func (tree *BPTree) findLeafFromTree(key uint32) *BPNode {
-// 	fmt.Println("\nFinding leaf to insert now...")
-
-// 	currNode := tree.Root
-// 	foundChild := false
-// 	potentialLeaf := NewBPNode(false)
-// 	targetedLeaf := NewBPNode(false)
-// 	fmt.Println("Current node:", currNode)
-// 	for !currNode.IsLeaf {
-// 		for keyIdx, keyVal := range currNode.Keys {
-// 			fmt.Println("Debug1", keyIdx, keyVal, key)
-// 			fmt.Println(currNode.Keys)
-// 			if key < keyVal {
-// 				fmt.Println("Debug 2")
-// 				potentialLeaf = currNode.KeyPtrs[keyIdx]
-// 				if potentialLeaf.IsLeaf {
-// 					foundChild = true
-// 					targetedLeaf = potentialLeaf
-// 					break
-// 				}
-// 			} else {
-// 				fmt.Println("next")
-// 			}
-// 		}
-
-// 		if len(potentialLeaf.Keys) == 0 {
-// 			potentialLeaf = currNode.KeyPtrs[len(currNode.Keys)]
-// 			if potentialLeaf.IsLeaf {
-// 				foundChild = true
-// 			}
-// 		}
-// 		if !foundChild {
-// 			currNode = potentialLeaf
-// 			// fmt.Println("Current node:", currNode)
-
-// 			// targetedLeaf = potentialLeaf.findLeafFromNode(key)
-// 		}
-// 	}
-// 	fmt.Println("Node to be inserted to: ", currNode)
-// 	fmt.Println("Current Keys: ", currNode.Keys)
-// 	fmt.Println("Current KeysPtrs: ", currNode.KeyPtrs)
-// 	return targetedLeaf
-// }
-
-// foundChild := false
-// for keyIdx, keyVal := range currNode.Keys {
-// 	fmt.Println("Debug 2")
-// 	if key < keyVal {
-// 		currNode = currNode.KeyPtrs[keyIdx]
-// 		fmt.Println(currNode)
-// 		foundChild = true
-// 		break
-// 	}
-// }
-// if !foundChild {
-// 	fmt.Println("Debug 3")
-// 	currNode = currNode.KeyPtrs[len(currNode.Keys)]
-// 	fmt.Println("Debug 3.2")
-// }
-// fmt.Println("Debug 4")
-
-// fmt.Println("Debug 5")
-
-// fmt.Println("Node to be inserted to: ", currNode)
-// fmt.Println("Current Keys: ", currNode.Keys)
-// fmt.Println("Current KeysPtrs: ", currNode.KeyPtrs)
-
-// return currNode
-
-// func (node *BPNode) findLeafFromNode(key uint32) *BPNode {
-// 	/* Use this function when the existing tree has more than 1 layer
-// 	will return the targetted node from the base level (i.e., leaf node)
-// 	*/
-
-// 	fmt.Println("\nLocating base level leaf...")
-// 	foundChild := false
-// 	potentialLeaf := NewBPNode(false)
-// 	targetedLeaf := NewBPNode(false)
-
-// 	for keyIdx, keyVal := range node.Keys {
-// 		if key < keyVal {
-// 			potentialLeaf = node.KeyPtrs[keyIdx]
-// 			if potentialLeaf.IsLeaf {
-// 				foundChild = true
-// 				targetedLeaf = potentialLeaf
-// 				break
-// 			}
-// 		}
-// 	}
-// 	if !foundChild {
-// 		potentialLeaf.findLeafFromNode(key)
-// 	}
-
-// 	return targetedLeaf
-// }
-
 func (node *BPNode) InsertValIntoLeaf(recordLoc *storage.RecordLocation, val uint32) *BPNode {
 
 	if !node.IsLeaf {
@@ -209,6 +110,7 @@ func (node *BPNode) InsertValIntoLeaf(recordLoc *storage.RecordLocation, val uin
 	return root
 
 }
+
 func (node *BPNode) FindRoot() *BPNode {
 	fmt.Println("Finding root node..")
 	fmt.Println(node)
@@ -360,7 +262,6 @@ func (node *BPNode) insertKeyIntoParent(newNode *BPNode) (*BPNode, bool) {
 
 		newParentTemp := NewBPNode(false)
 		for loopAgain {
-
 			fmt.Println("-----loop")
 			newParentTemp, loopAgain = currentNode.insertKeyIntoParent(newNode)
 			currentNode = currentNode.ParentNode
@@ -370,7 +271,6 @@ func (node *BPNode) insertKeyIntoParent(newNode *BPNode) (*BPNode, bool) {
 		returnNode := newParentTemp
 
 		return returnNode, loopAgain
-
 	}
 }
 
@@ -383,7 +283,6 @@ func (node *BPNode) insertIntoParentWithoutSplit(insertNode *BPNode) *BPNode {
 	fmt.Println("Updated parent node: ", node.ParentNode)
 
 	return node.ParentNode
-
 }
 
 func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) *BPNode {
