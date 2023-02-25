@@ -241,10 +241,9 @@ func getInsertIndex(keyList []uint32, val uint32) int {
 
 func (node *BPNode) insertIntoLeafWithoutSplitting(recordLoc *storage.RecordLocation, val uint32) *BPNode {
 	index := getInsertIndex(node.Keys, val)
-	var (
-		newKeyList    []uint32
-		newRecordPtrs []*RecordLLNode
-	)
+	var newKeyList []uint32
+	var newRecordPtrs []*RecordLLNode
+
 	newKeyList = node.Keys[:index]
 	newKeyList = append(newKeyList, val)
 	newKeyList = append(newKeyList, node.Keys[index:]...)
@@ -254,8 +253,9 @@ func (node *BPNode) insertIntoLeafWithoutSplitting(recordLoc *storage.RecordLoca
 		RecordInfo: recordLoc,
 		Next:       nil,
 	}
-	newRecordPtrs = node.RecordPtrs[:index]
-	newRecordPtrs = append(newRecordPtrs, &newRecord)
+	newRecordPtrs = node.RecordPtrs[:index]           //len 4
+	newRecordPtrs = append(newRecordPtrs, &newRecord) //len 5
+	//panic: runtime error: slice bounds out of range [4:3]
 	newRecordPtrs = append(newRecordPtrs, node.RecordPtrs[index:]...)
 	node.RecordPtrs = newRecordPtrs
 
@@ -512,4 +512,56 @@ func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) *BPNode {
 
 func (node *BPNode) isFull() bool {
 	return len(node.Keys) >= MAX_NUM_KEYS
+}
+
+func (tree *BPTree) NumLevels() int {
+	cursor := tree.Root
+	numLevels := 0
+
+	if tree.Root == nil {
+		return 0
+	} else {
+		numLevels = 1
+	}
+
+	// B+ tree is balanced, every root to leaf path has the same height
+	for !cursor.IsLeaf {
+		cursor = cursor.KeyPtrs[0]
+		numLevels++
+	}
+
+	return numLevels
+}
+
+func (tree *BPTree) NumNodes() int {
+	root := tree.Root
+
+	// Check empty tree
+	if root == nil {
+		return 0
+	}
+
+	children := tree.Root.KeyPtrs
+
+	count := 1
+	for {
+		if len(children) == 0 {
+			break
+		}
+
+		for _, value := range children {
+			// if empty child, skip.
+			if value == nil {
+				continue
+			} else {
+				count++
+			}
+			// if not leaf, append node's children
+			if value.IsLeaf == false {
+				children = append(children, value.KeyPtrs...)
+			}
+		}
+	}
+
+	return count
 }

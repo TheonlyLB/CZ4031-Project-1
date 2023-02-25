@@ -3,7 +3,7 @@ package index
 import "CZ4031_Project_1/storage"
 
 const (
-	MAX_NUM_KEYS int = 3 // TBD
+	MAX_NUM_KEYS int = 15 // TBD
 )
 
 type BPTree struct {
