@@ -54,7 +54,7 @@ func (tree *BPTree) findLeafFromTree(key uint32) *BPNode {
 		// fmt.Println("Curretn Node", currNode)
 		for keyIdx, keyVal := range currNode.Keys {
 			// fmt.Println("Debug 2")
-			if key < keyVal {
+			if key <= keyVal {
 				currNode = currNode.KeyPtrs[keyIdx]
 				fmt.Println(currNode)
 				if currNode.IsLeaf {
@@ -66,6 +66,9 @@ func (tree *BPTree) findLeafFromTree(key uint32) *BPNode {
 		}
 		if !foundChild {
 			// fmt.Println("Debug 3")
+			// fmt.Println("\ncrrNodes", currNode)
+			// fmt.Println("crrNodes last ptrs", currNode.KeyPtrs[len(currNode.Keys)])
+
 			currNode = currNode.KeyPtrs[len(currNode.Keys)]
 			// fmt.Println("2- current Node", currNode)
 
@@ -121,7 +124,7 @@ func (node *BPNode) InsertValIntoLeaf(recordLoc *storage.RecordLocation, val uin
 }
 
 func (node *BPNode) FindRoot() *BPNode {
-	fmt.Println("Finding root node..")
+	fmt.Println("\nFinding root node..")
 	fmt.Println(node)
 	fmt.Println(node.ParentNode)
 
@@ -155,7 +158,7 @@ func getInsertIndex(keyList []uint32, val uint32) int {
 func (node *BPNode) insertIntoLeafWithoutSplitting(recordLoc *storage.RecordLocation, val uint32) *BPNode {
 	index := getInsertIndex(node.Keys, val)
 	// nodeTemp := node
-	fmt.Println("Index: i", index)
+	fmt.Println("Index to be inserted in the leaf: ", index)
 	var newKeyList []uint32
 	var newRecordPtrs []*RecordLLNode
 
@@ -238,17 +241,17 @@ func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, v
 	allRecordPtrs = node.RecordPtrs[:index]
 	// fmt.Println("1 All recordptrslist: ", allRecordPtrs)
 	allRecordPtrs = append(allRecordPtrs, &newRecord)
-	fmt.Println("All key list: ", node.Keys)
+	// fmt.Println("All key list: ", node.Keys)
 
 	// fmt.Println("1 All recordptrslist: ", allRecordPtrs)
 	// allRecordPtrs = append(allRecordPtrs, node.RecordPtrs[index:]...)
-	fmt.Println("All key list: ", node.Keys)
+	// fmt.Println("All key list: ", node.Keys)
 
 	numOfLeftKeys := math.Ceil((float64(MAX_NUM_KEYS) + 1) / 2)
-	fmt.Println("All key list: ", node.Keys)
+	// fmt.Println("All key list: ", node.Keys)
 
 	// Current node will be made as the left node
-	newRightNode := NewBPNode(node.IsLeaf)
+	rightNode := NewBPNode(node.IsLeaf)
 	// newParentNode := NewBPNode(false)
 
 	// newRightNode.Next = node.Next
@@ -258,30 +261,51 @@ func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, v
 	fmt.Print("All record ptrs: ", allRecordPtrs)
 	allKeysListCopy := node.Keys
 	allRecordPtrsCopy := node.RecordPtrs
-	fmt.Println("Right node keys: ", allKeysListCopy[int(numOfLeftKeys):])
-	newRightNode.Keys = allKeysListCopy[int(numOfLeftKeys):]
-	newRightNode.RecordPtrs = allRecordPtrsCopy[int(numOfLeftKeys):]
-	fmt.Print("New Right Node info: ", newRightNode)
+
+	rightNodeNew := false
+	if index <= MAX_NUM_KEYS {
+		rightNodeNew = false
+	} else {
+		rightNodeNew = true
+	}
+
+	fmt.Println("new node keys: ", allKeysListCopy[int(numOfLeftKeys):])
+	rightNode.Keys = allKeysListCopy[int(numOfLeftKeys):]
+	rightNode.RecordPtrs = allRecordPtrsCopy[int(numOfLeftKeys):]
+	leftNode := node
+	leftNode.Keys = allKeysList[:int(numOfLeftKeys)]
+	leftNode.RecordPtrs = allRecordPtrs[:int(numOfLeftKeys)]
+
+	fmt.Print("New  Node info: ", rightNode)
 
 	fmt.Println("...updating current node info")
 	// fmt.Println("All key list: ", allKeysList)
 	// fmt.Println("All recordptrslist: ", allRecordPtrs)
 
-	node.Keys = allKeysList[:int(numOfLeftKeys)]
-	node.RecordPtrs = allRecordPtrs[:int(numOfLeftKeys)]
 	// fmt.Println(node.Keys)
 
 	/// update parent node for the new RightNode
 
 	oldParentNode := node.ParentNode
-	node.Next = newRightNode
-	newRightNode.ParentNode = node.ParentNode
-	// fmt.Println("old paremt node ptrs: ", &oldParentNode.KeyPtrs)
+	leftNode.Next = rightNode
+
+	newNode := NewBPNode(false)
+	if rightNodeNew {
+		newNode = rightNode
+		fmt.Println("New node is at the right")
+	} else {
+		newNode = leftNode
+		fmt.Println("New node is at the left")
+	}
+
+	rightNode.ParentNode = node.ParentNode
+	leftNode.ParentNode = node.ParentNode
+	fmt.Println("new node is: ", newNode)
 
 	fmt.Println("Old parent node: ", oldParentNode)
-	fmt.Println("\nFirst new Right Node", newRightNode)
+	fmt.Println("\nRight Node", rightNode)
 
-	rootNode, tempReturn := node.insertKeyIntoParent(newRightNode)
+	rootNode, tempReturn := node.insertKeyIntoParent(rightNode)
 	fmt.Println(tempReturn)
 
 	return rootNode
@@ -340,10 +364,42 @@ func (node *BPNode) insertKeyIntoParent(newNode *BPNode) (*BPNode, bool) {
 }
 
 func (node *BPNode) insertIntoParentWithoutSplit(insertNode *BPNode) *BPNode {
-	fmt.Println("Old parent node is not full, can modify direcly")
-	node.ParentNode.Keys = append(node.ParentNode.Keys, insertNode.Keys[0])
+	// fmt.Println("Old parent node is not full, can modify direcly")
+	fmt.Println("Node to be inserted to parent, ", insertNode)
+	val := insertNode.Keys[0]
+	fmt.Println("keyt[0] ", val)
 
-	node.ParentNode.KeyPtrs = append(node.ParentNode.KeyPtrs, insertNode)
+	index := getInsertIndex(node.ParentNode.Keys, val)
+
+	fmt.Println("Index to be inserted ", index)
+	fmt.Println("\nOrig parent: ", insertNode.ParentNode)
+	origKeyList := insertNode.ParentNode.Keys
+	origKeyPtrsList := insertNode.ParentNode.KeyPtrs
+
+	newKeyList := origKeyList
+	fmt.Println("Orig keylist: ", newKeyList)
+
+	if len(newKeyList) == index {
+		newKeyList = append(newKeyList, val)
+	} else {
+		newKeyList = append(newKeyList[:index+1], newKeyList[index:]...)
+		newKeyList[index] = val
+	}
+
+	newKeyPtrsList := origKeyPtrsList
+	if len(newKeyList) == index {
+		newKeyPtrsList = append(newKeyPtrsList, insertNode)
+	} else {
+		newKeyPtrsList = append(newKeyPtrsList[:index+1], newKeyPtrsList[index:]...)
+		newKeyPtrsList[index] = insertNode
+	}
+
+	// node.ParentNode.Keys = append(node.ParentNode.Keys, insertNode.Keys[0])
+
+	// node.ParentNode.KeyPtrs = append(node.ParentNode.KeyPtrs, insertNode)
+
+	node.ParentNode.Keys = newKeyList
+	node.ParentNode.KeyPtrs = newKeyPtrsList
 	// node.ParentNode.RecordPtrs = append(node.ParentNode.RecordPtrs, insertNode.RecordPtrs[0])
 	fmt.Println("Updated parent node: ", node.ParentNode)
 
