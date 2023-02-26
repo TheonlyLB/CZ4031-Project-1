@@ -54,19 +54,22 @@ func (tree *BPTree) findLeafFromTree(key uint32) *BPNode {
 	for !currNode.IsLeaf {
 		fmt.Println("Curretn Node", currNode)
 		for keyIdx, keyVal := range currNode.Keys {
-			fmt.Println("Key val, keyIdx", keyVal, "id", keyIdx)
-			fmt.Println("idx1", currNode.KeyPtrs[1])
-			fmt.Println("idx2", currNode.KeyPtrs[keyIdx+1])
-			fmt.Println("idx-1", currNode.KeyPtrs[0])
+			fmt.Println("\nKey val, keyIdx", keyVal, "id", keyIdx)
+			fmt.Println("idx", currNode.KeyPtrs[keyIdx])
+			fmt.Println("idx=1", currNode.KeyPtrs[1])
+			fmt.Println("idx=0", currNode.KeyPtrs[0])
+			fmt.Println("idx=last", currNode.KeyPtrs[len(currNode.KeyPtrs)-1])
 
 			if key <= keyVal {
+				fmt.Println("KEY <= KEYVAL", key, keyVal)
 				currNode = currNode.KeyPtrs[keyIdx]
 				fmt.Println(currNode)
 				if currNode.IsLeaf {
 					fmt.Println("found!")
 					foundChild = true
+					break
 				}
-				break
+
 			}
 		}
 		if !foundChild {
@@ -74,7 +77,7 @@ func (tree *BPTree) findLeafFromTree(key uint32) *BPNode {
 			fmt.Println("\nfindleafcurrNode", currNode)
 			// fmt.Println("crrNodes last ptrs", currNode.KeyPtrs[len(currNode.Keys)])
 			if currNode.Next == nil {
-				currNode = currNode.KeyPtrs[0]
+				currNode = currNode.KeyPtrs[len(currNode.Keys)]
 			} else {
 				currNode = currNode.Next
 			}
@@ -149,6 +152,11 @@ func (node *BPNode) FindRoot() *BPNode {
 
 	rootNode := tempNode
 	fmt.Println("Current root is: ", rootNode)
+	if len(rootNode.KeyPtrs) > 0 {
+		fmt.Println("root first: ", rootNode.KeyPtrs[0])
+
+		fmt.Println("root last!!", rootNode.KeyPtrs[len(rootNode.KeyPtrs)-1])
+	}
 	return rootNode
 }
 
@@ -195,17 +203,42 @@ func (node *BPNode) insertIntoLeafWithoutSplitting(recordLoc *storage.RecordLoca
 	// fmt.Println("New Keys to append right: ", node.Keys[index:])
 	// fmt.Println("New Keys right: ", newKeyList3)
 	newKeyList = origKeys
+
+	fmt.Println("next (before find root)", node.Next)
+
 	fmt.Println("\nOrig keylist: ", newKeyList)
+	fmt.Println("\nnext keylist: ", node.Next)
+	var nextPreserve = []uint32{}
+	if node.Next != nil {
+		for idx, key := range node.Next.Keys {
+			nextPreserve = append(nextPreserve, key)
+			fmt.Println(idx)
+		}
+	}
+
+	fmt.Println("\nnextpreserve", nextPreserve)
+
 	if len(newKeyList) == index {
 		newKeyList = append(newKeyList, val)
+		fmt.Println("\nnextpreserve", nextPreserve)
+
+		fmt.Println("!!!next (before find root)", node.Next)
+
 	} else {
 		newKeyList = append(newKeyList[:index+1], newKeyList[index:]...)
 		newKeyList[index] = val
-	}
+		fmt.Println("\nnextpreserve", nextPreserve)
 
+		fmt.Println("!!!next (before find root)", node.Next)
+
+	}
+	if node.Next != nil {
+		node.Next.Keys = nextPreserve
+	}
 	fmt.Println("Updated keylist: ", newKeyList)
 
 	node.Keys = newKeyList
+	fmt.Println("!!!next (before find root)", node.Next)
 
 	newRecord := RecordLLNode{
 		RecordInfo: recordLoc,
@@ -221,6 +254,7 @@ func (node *BPNode) insertIntoLeafWithoutSplitting(recordLoc *storage.RecordLoca
 	fmt.Println("New Record Ptrs right: ", newRecordPtrs)
 
 	node.RecordPtrs = newRecordPtrs
+	fmt.Println("next (before find root)", node.Next)
 
 	return node
 }
@@ -334,9 +368,14 @@ func (node *BPNode) insertKeyIntoParent(newNode *BPNode) (*BPNode, bool) {
 		fmt.Println("Old parent node was a root node, need to set a new root node and update tree")
 		newRoot := NewBPNode(false)
 		newRoot.Keys = []uint32{newNode.Keys[0]}
+		fmt.Println("newly created root", newRoot)
+
 		newRoot.KeyPtrs = []*BPNode{node, newNode}
+
 		node.ParentNode = newRoot
 		newNode.ParentNode = newRoot
+		fmt.Println("first key", newRoot.KeyPtrs[0])
+		fmt.Println("last key", newRoot.KeyPtrs[1])
 		return newRoot, loopAgain
 
 	} else if !node.ParentNode.isFull() {
