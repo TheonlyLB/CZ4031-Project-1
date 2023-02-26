@@ -171,6 +171,9 @@ func getInsertIndex(keyList []uint32, val uint32) int {
 		}
 	}
 	if !found {
+
+		fmt.Println("not found, insert to last at ", len(keyList))
+		fmt.Println("key list: ", keyList)
 		insertIndex = len(keyList)
 	}
 	return insertIndex
@@ -384,6 +387,7 @@ func (node *BPNode) insertKeyIntoParent(newNode *BPNode) (*BPNode, bool) {
 
 		// Insert into parent without splitting
 		fmt.Println("Old parent node is not full, can modify direcly")
+		fmt.Println("current node's parent", node.ParentNode)
 		newParent := node.insertIntoParentWithoutSplit(newNode)
 
 		return newParent, loopAgain
@@ -400,6 +404,9 @@ func (node *BPNode) insertKeyIntoParent(newNode *BPNode) (*BPNode, bool) {
 		newAddedParent := currentNode.insertIntoParentWithSplit(newNode)
 		currentNode = currentNode.ParentNode
 		newNode = newAddedParent
+
+		fmt.Println("current node", currentNode)
+		fmt.Println("new added aprent node", newNode)
 
 		newParentTemp := NewBPNode(false)
 		for loopAgain {
@@ -420,11 +427,12 @@ func (node *BPNode) insertIntoParentWithoutSplit(insertNode *BPNode) *BPNode {
 	fmt.Println("Node to be inserted to parent, ", insertNode)
 	val := insertNode.Keys[0]
 	fmt.Println("keyt[0] ", val)
-
+	fmt.Println("insert parent, ", insertNode.ParentNode)
+	fmt.Println("node parent, ", node.ParentNode)
 	index := getInsertIndex(node.ParentNode.Keys, val)
 
 	fmt.Println("Index to be inserted ", index)
-	fmt.Println("\nOrig parent: ", insertNode.ParentNode)
+	fmt.Println("\nOrig insertnode parent: ", insertNode.ParentNode)
 	origKeyList := insertNode.ParentNode.Keys
 	origKeyPtrsList := insertNode.ParentNode.KeyPtrs
 
@@ -481,15 +489,20 @@ func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) *BPNode {
 
 	node.ParentNode.Keys = allKeys[:int(numOfLeftKeys)]
 	node.ParentNode.KeyPtrs = allKeyPtrs[:int(numOfLeftKeys)+1]
-	fmt.Println("\nUpdated old parent", node.ParentNode)
+	fmt.Println("\nUpdated left parent", node.ParentNode)
 
 	newRightParentNode := NewBPNode(false)
 	newRightParentNode.Keys = allKeys[int(numOfLeftKeys)+1:]
 	newRightParentNode.KeyPtrs = allKeyPtrs[int(numOfLeftKeys)+1:]
 	newRightParentNode.ParentNode = node.ParentNode
+	fmt.Println("\nUpdated left parent", node.ParentNode)
+	fmt.Println("Updated right parent", newRightParentNode)
 
 	node.ParentNode.Next = newRightParentNode
-	insertNode.ParentNode = newRightParentNode
+	// insertNode.ParentNode = newRightParentNode
+	insertNode.ParentNode = node.ParentNode.ParentNode
+	fmt.Println("\nUpdated left parent's parent", node.ParentNode.ParentNode)
+	fmt.Println("Updated right parent's parent", newRightParentNode.ParentNode)
 
 	return newRightParentNode
 
