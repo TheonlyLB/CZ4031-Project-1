@@ -392,7 +392,6 @@ func (tree *BPTree) Delete(key uint32) {
 		tree.deleteKey(leafNode, key)
 	}
 }
-
 func (tree *BPTree) deleteKey(node *BPNode, key uint32) {
 	node.deleteKeyFromNode(key)
 	// // If the leafNode is the root node, we need to check if the leafNode has any keys
