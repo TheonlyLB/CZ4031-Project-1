@@ -244,8 +244,70 @@ func TestDelete(t *testing.T) {
 	fmt.Println(" \n----------------------------")
 
 	// Print tree
-	leaf1.ParentNode = nil
-	leaf2.ParentNode = nil
-	p, _ := json.Marshal(parent)
-	t.Logf("parent: %v", string(p))
+	// leaf1.ParentNode = nil
+	// leaf2.ParentNode = nil
+	// p, _ := json.Marshal(parent)
+	// t.Logf("parent: %v", string(p))
+
+	/////////////////////////////////////////////////////////////
+	////// Final Tree
+	b, _ := json.Marshal(tree.Root)
+
+	fmt.Println(string(b))
+	fmt.Println("Total number of test values: ", TEST_NUM)
+	PrintTree(tree)
+
+	fmt.Println("")
+	fmt.Println("Testing finished!!")
+	fmt.Println("==============================================================================")
+
+	return
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func PrintTree(tree *index.BPTree) {
+	fmt.Println("\nRoot: ", tree.Root)
+
+	layerNo := 0
+	nextLayer := true
+	fmt.Println("\nRoot,  //layer", layerNo)
+	fmt.Println("        ", tree.Root.Keys)
+
+	tempParentNodeList := make([]*index.BPNode, 0)
+	tempParentNodeList = append(tempParentNodeList, tree.Root)
+	tempNodeWithChildList := make([]*index.BPNode, 0)
+	for nextLayer {
+		// fmt.Println(tempParentNodeList)
+		for i := range tempParentNodeList {
+			// fmt.Println(i)
+			// fmt.Println("Lenth of list", len(tempParentNodeList))
+
+			// fmt.Println(tempParentNodeList[i].KeyPtrs)
+			if len(tempParentNodeList[i].KeyPtrs) > 0 {
+				for j := range tempParentNodeList[i].KeyPtrs {
+					tempNodeWithChildList = append(tempNodeWithChildList, tempParentNodeList[i].KeyPtrs[j])
+				}
+			}
+			// tempParentNodeList = tempNodeWithChildList
+			// if len(tempParentNodeList) == 0 {
+			// 	fmt.Println("break")
+			// 	nextLayer = false
+			// 	break
+			// }
+		}
+		if len(tempParentNodeList) == 0 {
+			// fmt.Println("break")
+			nextLayer = false
+			break
+		}
+		tempParentNodeList = tempNodeWithChildList
+		layerNo += 1
+		fmt.Println("Nodes, //layer", layerNo, "")
+		for k := range tempParentNodeList {
+			fmt.Println("        ", tempParentNodeList[k].Keys)
+		}
+		tempNodeWithChildList = nil
+
+	}
 }
