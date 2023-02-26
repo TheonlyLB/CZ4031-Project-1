@@ -477,9 +477,9 @@ func (tree *BPTree) Merge(node *BPNode, mergeIntoNode *BPNode, isLeft bool) {
 	tempKeys := make([]uint32, len(node.Keys)+len(mergeIntoNode.Keys))
 	mergeIntoKeyLen := len(mergeIntoNode.Keys)
 	nodeKeyLen := len(node.Keys)
-	fmt.Println("\nmergeIntoKeyLen", mergeIntoKeyLen)
-	fmt.Println("mergeIntoKeyLen", mergeIntoNode.Keys)
-	fmt.Println("mergeIntoNodes", node)
+	// fmt.Println("\nmergeIntoKeyLen", mergeIntoKeyLen)
+	// fmt.Println("mergeIntoKeyLen", mergeIntoNode.Keys)
+	// fmt.Println("mergeIntoNodes", node)
 
 	if node.IsLeaf {
 		tempPtrs := make([]*RecordLLNode, len(node.RecordPtrs))
