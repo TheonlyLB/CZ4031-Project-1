@@ -57,24 +57,73 @@ func Experiments(blockSize uint8) {
 		• the number of index nodes the process accesses;
 		• the number of data blocks the process accesses;
 		• the average of “averageRating’s” of the records that are returned;
-		• the running time of the retrieval process (please specify the method
-		you use for measuring the running time of a piece of code)
-		• the number of data blocks that would be accessed by a brute-force
-		linear scan method (i.e., it scans the data blocks one by one) and its
-		running time (for comparison)
+		• the running time of the retrieval process (please specify the method you use for measuring the running time of a piece of code)
+		• the number of data blocks that would be accessed by a brute-force linear scan method (i.e., it scans the data blocks one by one) and its running time (for comparison)
 	*/
+
+	// TODO insert tree search here
+
 	// bruteforce search
 	var search = [2]uint32{500, 500}
 	start := time.Now()
 	var _, bruteBlocksAccessed = disk.BruteForceSearch(search)
 	t := time.Now()
 	elapsedBruteForce := t.Sub(start)
-	fmt.Println("=== Experiment 3 ===")
-	// search tree for numVotes equal 500
+	fmt.Println("\n=== Experiment 3 ===\n")
 	fmt.Printf("Number for index nodes the process access: %d\n", index.MAX_NUM_KEYS)
 	fmt.Printf("Number for data blocks the process access: %d\n", index.MAX_NUM_KEYS)
 	fmt.Printf("Average of 'averageRatings' of records returned: %d\n", index.MAX_NUM_KEYS)
 	fmt.Printf("Running time of retrieval initialised (difference in monotonic clock before and after the function call): %d\n", index.MAX_NUM_KEYS)
 	fmt.Printf("Number of data blocks accessed by brute-force linear scan: %d\n", bruteBlocksAccessed)
 	fmt.Printf("Running time of brute-force linear scan: %v\n", elapsedBruteForce)
+
+	/*
+		Experiment 4: retrieve those movies with the attribute “numVotes” from 30,000 to 40,000, both inclusively and report the following statistics:
+		• the number of index nodes the process accesses;
+		• the number of data blocks the process accesses;
+		• the average of “averageRating’s” of the records that are returned;
+		• the running time of the retrieval process;
+		• the number of data blocks that would be accessed by a brute-force linear scan method (i.e., it scans the data blocks one by one) and its running time (for comparison)
+	*/
+	// TODO insert tree range search here
+
+	// bruteforce search
+	var search2 = [2]uint32{30000, 40000}
+	start2 := time.Now()
+	var _, bruteBlocksAccessed2 = disk.BruteForceSearch(search2)
+	t2 := time.Now()
+	elapsedBruteForce2 := t2.Sub(start2)
+
+	fmt.Println("\n=== Experiment 4 ===\n")
+	fmt.Printf("Number for index nodes the process access: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Number for data blocks the process access: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Average of 'averageRatings' of records returned: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Running time of retrieval initialised (difference in monotonic clock before and after the function call): %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Number of data blocks accessed by brute-force linear scan: %d\n", bruteBlocksAccessed2)
+	fmt.Printf("Running time of brute-force linear scan: %v\n", elapsedBruteForce2)
+
+	/*
+		Experiment 5: delete those movies with the attribute “numVotes” equal to 1,000, update the B+ tree accordingly, and report the following statistics:
+		• the number nodes of the updated B+ tree;
+		• the number of levels of the updated B+ tree;
+		• the content of the root node of the updated B+ tree(only the keys);
+		• the running time of the process;
+		• the number of data blocks that would be accessed by a brute-force linear scan method (i.e., it scans the data blocks one by one) and its running time (for comparison)
+	*/
+	// TODO insert tree search and delete here
+
+	// bruteforce search
+	var search3 = [2]uint32{1000, 1000}
+	start3 := time.Now()
+	var _, bruteBlocksAccessed3 = disk.BruteForceSearch(search3)
+	t3 := time.Now()
+	elapsedBruteForce3 := t3.Sub(start3)
+
+	fmt.Println("\n=== Experiment 5 ===\n")
+	fmt.Printf("Number for index nodes the process access: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Number for data blocks the process access: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Average of 'averageRatings' of records returned: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Running time of retrieval initialised (difference in monotonic clock before and after the function call): %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Number of data blocks accessed by brute-force linear scan: %d\n", bruteBlocksAccessed3)
+	fmt.Printf("Running time of brute-force linear scan: %v\n", elapsedBruteForce3)
 }
