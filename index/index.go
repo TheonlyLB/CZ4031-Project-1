@@ -79,12 +79,9 @@ func (tree *BPTree) findLeafFromTree(key uint32) *BPNode {
 	fmt.Println("Node to be inserted to: ", currNode)
 	fmt.Println("Current Keys: ", currNode.Keys)
 	fmt.Println("Current KeysPtrs: ", currNode.KeyPtrs)
-	if !foundChild {
-		fmt.Println("\nKey", key, "is not found in the tree!!! \nSKIP and EXIT now....")
-		return nil
-	} else {
-		return currNode
-	}
+
+	return currNode
+
 }
 
 func (node *BPNode) InsertValIntoLeaf(recordLoc *storage.RecordLocation, val uint32) *BPNode {
@@ -384,9 +381,14 @@ func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) *BPNode {
 
 func (tree *BPTree) Delete(key uint32) {
 	leafNode := tree.findLeafFromTree(key)
-	if leafNode == nil {
-		return
-	} else {
+	keyExists := false
+	for k := range leafNode.Keys {
+		if uint32(k) == key {
+			keyExists = true
+		}
+	}
+
+	if keyExists {
 		tree.deleteKey(leafNode, key)
 	}
 }
