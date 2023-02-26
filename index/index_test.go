@@ -63,10 +63,30 @@ func TestDelete(t *testing.T) {
 
 	fmt.Println("Testing starts...")
 	fmt.Println("")
+	fmt.Println("Initial tree: ")
+	PrintTree(tree)
+	fmt.Println(" \n----------------------------")
+
 	tree.Delete(5)
+	fmt.Println("\ndONE!!")
+	PrintTree(tree)
+
+	fmt.Println("****************")
 	tree.Delete(3)
+	fmt.Println("\ndONE!!")
+	PrintTree(tree)
+
+	fmt.Println("****************")
 	tree.Delete(1)
+	fmt.Println("\ndONE!!")
+	PrintTree(tree)
+
+	fmt.Println("****************")
 	tree.Delete(0)
+	fmt.Println("\ndONE!!")
+	PrintTree(tree)
+
+	fmt.Println("****************")
 	// llNodes := initRecordLLNodes()
 
 	// parent := &index.BPNode{
