@@ -205,15 +205,13 @@ func TestDelete(t *testing.T) {
 	fmt.Println("==============================================================================")
 	fmt.Println("Initializing mock tree....")
 	fmt.Println("")
-
-	llNodes := initRecordLLNodes()
-	tree := initTree(llNodes)
-	fmt.Println("testNodes", llNodes)
-	fmt.Println("First test Node", llNodes[0].RecordInfo)
+	testNodes := initRecordLLNodes()
+	tree := initTree(testNodes)
+	fmt.Println("testNodes", testNodes)
+	fmt.Println("First test Node", testNodes[0].RecordInfo)
 	fmt.Println("Initial Tree at", tree)
 	fmt.Println("Initial Root node", tree.Root)
 	fmt.Println(tree.Root.KeyPtrs[0].Keys)
-
 	fmt.Println(" \n----------------------------")
 
 	fmt.Println("Testing starts...")
@@ -226,13 +224,13 @@ func TestDelete(t *testing.T) {
 	leaf1 := &index.BPNode{
 		IsLeaf:     true,
 		Keys:       []uint32{2, 3},
-		RecordPtrs: []*index.RecordLLNode{llNodes[2], llNodes[3]},
+		RecordPtrs: []*index.RecordLLNode{testNodes[2], testNodes[3]},
 		ParentNode: parent,
 	}
 	leaf2 := &index.BPNode{
 		IsLeaf:     true,
 		Keys:       []uint32{4},
-		RecordPtrs: []*index.RecordLLNode{llNodes[4]},
+		RecordPtrs: []*index.RecordLLNode{testNodes[4]},
 		ParentNode: parent,
 	}
 	parent.Keys = []uint32{4}
