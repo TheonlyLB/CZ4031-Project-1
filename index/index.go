@@ -349,8 +349,8 @@ func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, v
 	fmt.Println("All key list: ", node.Keys)
 	fmt.Print("Nof left keys: ", numOfLeftKeys)
 	fmt.Print("All record ptrs: ", allRecordPtrs)
-	// allKeysListCopy := node.Keys
-	// allRecordPtrsCopy := node.RecordPtrs
+	allKeysListCopy := node.Keys
+	allRecordPtrsCopy := node.RecordPtrs
 	fmt.Println("Right node keys: ", allKeysListCopy[int(numOfLeftKeys):])
 	newRightNode.Keys = allKeysListCopy[int(numOfLeftKeys):]
 	newRightNode.RecordPtrs = allRecordPtrsCopy[int(numOfLeftKeys):]
