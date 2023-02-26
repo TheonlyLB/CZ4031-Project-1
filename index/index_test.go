@@ -48,15 +48,168 @@ func initTree(nodes []*index.RecordLLNode) *index.BPTree {
 	return tree
 }
 
-func TestIndex(t *testing.T) {
+// func TestIndex(t *testing.T) {
+// 	fmt.Println("==============================================================================")
+// 	fmt.Println("Initializing mock tree....")
+// 	fmt.Println("")
+
+// 	testNodes := initRecordLLNodes()
+// 	tree := initTree(testNodes)
+// 	fmt.Println("testNodes", testNodes)
+// 	fmt.Println("First test Node", testNodes[0].RecordInfo)
+// 	fmt.Println("Initial Tree at", tree)
+// 	fmt.Println("Initial Root node", tree.Root)
+// 	fmt.Println(tree.Root.KeyPtrs[0].Keys)
+
+// 	fmt.Println(" \n----------------------------")
+
+// 	fmt.Println("Testing starts...")
+// 	fmt.Println("")
+
+// 	for i := 0; i < 7; i++ {
+
+// 		val := uint32(i + 5)
+// 		fmt.Println("Inserting value ", val)
+// 		fmt.Println("")
+// 		tree.Insert(testNodes[i].RecordInfo, val)
+// 		fmt.Println("\nInsert Finished for value ", val, "! ")
+// 		fmt.Println(" \n##############################")
+
+// 	}
+// 	b, _ := json.Marshal(tree.Root)
+// 	fmt.Println(b)
+// 	fmt.Println("Root: ", tree.Root)
+// 	fmt.Println("Root: ", tree.Root.Keys)
+// 	fmt.Println("Leafs (2nd Layer)")
+// 	for i := range tree.Root.KeyPtrs {
+// 		// fmt.Println(i)
+// 		fmt.Println("      ", tree.Root.KeyPtrs[i].Keys)
+// 	}
+// 	// fmt.Println(tree.Root.KeyPtrs)
+
+// 	fmt.Println("Leafs (3rd Layer)")
+// 	// fmt.Println("      ", tree.Root.KeyPtrs[1].Next.Keys)
+
+// 	// fmt.Println("Leafs (3rd Layer)")
+// 	// for i := range tree.Root.Keys {
+// 	// 	fmt.Println("      ", tree.Root.KeyPtrs[1].Keys[i])
+// 	// }
+
+// 	// tree_json := string(b)
+// 	// fmt.Println("new tree: ", tree_json)
+// 	// for i := range string(b) {
+// 	// 	fmt.Println(i)
+// 	// }
+
+// 	fmt.Println("")
+// 	fmt.Println("Testing finished!!")
+// 	fmt.Println("==============================================================================")
+
+// 	return
+// }
+
+// func TestBorrow(t *testing.T) {
+// 	fmt.Println("==============================================================================")
+// 	fmt.Println("Initializing mock tree....")
+// 	fmt.Println("")
+
+// 	testNodes := initRecordLLNodes()
+// 	tree := initTree(testNodes)
+// 	fmt.Println("testNodes", testNodes)
+// 	fmt.Println("First test Node", testNodes[0].RecordInfo)
+// 	fmt.Println("Initial Tree at", tree)
+// 	fmt.Println("Initial Root node", tree.Root)
+// 	fmt.Println(tree.Root.KeyPtrs[0].Keys)
+
+// 	fmt.Println(" \n----------------------------")
+
+// 	fmt.Println("Testing starts...")
+// 	fmt.Println("")
+// 	llNodes := initRecordLLNodes()
+// 	// tree := initTree(llNodes)
+
+// 	// b, _ := json.Marshal(llNodes)
+// 	// t.Logf("nodes: %v", string(b))
+// 	// var n1KeyPtr, n2KeyPtr []*index.BPNode
+// 	// n1KeyPtr = append(n1KeyPtr, &index.BPNode{
+// 	// 	IsLeaf:     true,
+// 	// 	Keys:       []uint32{0, 1},
+// 	// 	RecordPtrs: []*index.RecordLLNode{llNodes[0], llNodes[1]},
+// 	// })
+// 	// n1KeyPtr = append(n1KeyPtr, &index.BPNode{
+// 	// 	IsLeaf:     true,
+// 	// 	Keys:       []uint32{2, 3},
+// 	// 	RecordPtrs: []*index.RecordLLNode{llNodes[2], llNodes[3]},
+// 	// })
+// 	// n1KeyPtr = append(n1KeyPtr, &index.BPNode{
+// 	// 	IsLeaf:     true,
+// 	// 	Keys:       []uint32{4},
+// 	// 	RecordPtrs: []*index.RecordLLNode{llNodes[4]},
+// 	// })
+
+// 	// node1 := &index.BPNode{
+// 	// 	IsLeaf: false,
+// 	// 	Keys:   []uint32{2, 4},
+// 	// 	// RecordPtrs: []*index.RecordLLNode{llNodes[3]},
+// 	// 	KeyPtrs: n1KeyPtr,
+// 	// }
+
+// 	// n2KeyPtr = append(n2KeyPtr, &index.BPNode{
+// 	// 	IsLeaf:     true,
+// 	// 	Keys:       []uint32{5},
+// 	// 	RecordPtrs: []*index.RecordLLNode{llNodes[5]},
+// 	// })
+
+// 	// n2KeyPtr = append(n2KeyPtr, &index.BPNode{
+// 	// 	IsLeaf:     true,
+// 	// 	Keys:       []uint32{6},
+// 	// 	RecordPtrs: []*index.RecordLLNode{llNodes[6]},
+// 	// })
+// 	// node2 := &index.BPNode{
+// 	// 	IsLeaf: false,
+// 	// 	Keys:   []uint32{6},
+// 	// 	// RecordPtrs: llNodes[:3],
+// 	// 	KeyPtrs: n2KeyPtr,
+// 	// }
+
+// 	// node2.BorrowKeyFromNode(node1)
+// 	// n1, _ := json.Marshal(node1)
+// 	// n2, _ := json.Marshal(node2)
+// 	// t.Logf("Node1: %v", string(n1))
+// 	// t.Logf("Node2: %v", string(n2))
+// 	parent := &index.BPNode{
+// 		IsLeaf: false,
+// 	}
+// 	leaf1 := &index.BPNode{
+// 		IsLeaf:     true,
+// 		Keys:       []uint32{2, 3},
+// 		RecordPtrs: []*index.RecordLLNode{llNodes[2], llNodes[3]},
+// 		ParentNode: parent,
+// 	}
+// 	leaf2 := &index.BPNode{
+// 		IsLeaf:     true,
+// 		Keys:       []uint32{4},
+// 		RecordPtrs: []*index.RecordLLNode{llNodes[4]},
+// 		ParentNode: parent,
+// 	}
+// 	parent.Keys = []uint32{4}
+// 	parent.KeyPtrs = []*index.BPNode{leaf1, leaf2}
+
+//		leaf2.BorrowKeyFromNode(leaf1, true)
+//		leaf1.ParentNode = nil
+//		leaf2.ParentNode = nil
+//		p, _ := json.Marshal(parent)
+//		t.Logf("parent: %v", string(p))
+//	}
+func TestDelete(t *testing.T) {
 	fmt.Println("==============================================================================")
 	fmt.Println("Initializing mock tree....")
 	fmt.Println("")
 
-	testNodes := initRecordLLNodes()
-	tree := initTree(testNodes)
-	fmt.Println("testNodes", testNodes)
-	fmt.Println("First test Node", testNodes[0].RecordInfo)
+	llNodes := initRecordLLNodes()
+	tree := initTree(llNodes)
+	fmt.Println("testNodes", llNodes)
+	fmt.Println("First test Node", llNodes[0].RecordInfo)
 	fmt.Println("Initial Tree at", tree)
 	fmt.Println("Initial Root node", tree.Root)
 	fmt.Println(tree.Root.KeyPtrs[0].Keys)
@@ -65,102 +218,8 @@ func TestIndex(t *testing.T) {
 
 	fmt.Println("Testing starts...")
 	fmt.Println("")
+	// llNodes := initRecordLLNodes()
 
-	for i := 0; i < 7; i++ {
-
-		val := uint32(i + 5)
-		fmt.Println("Inserting value ", val)
-		fmt.Println("")
-		tree.Insert(testNodes[i].RecordInfo, val)
-		fmt.Println("\nInsert Finished for value ", val, "! ")
-		fmt.Println(" \n##############################")
-
-	}
-	b, _ := json.Marshal(tree.Root)
-	fmt.Println(b)
-	fmt.Println("Root: ", tree.Root)
-	fmt.Println("Root: ", tree.Root.Keys)
-	fmt.Println("Leafs (2nd Layer)")
-	for i := range tree.Root.KeyPtrs {
-		// fmt.Println(i)
-		fmt.Println("      ", tree.Root.KeyPtrs[i].Keys)
-	}
-	// fmt.Println(tree.Root.KeyPtrs)
-
-	fmt.Println("Leafs (3rd Layer)")
-	// fmt.Println("      ", tree.Root.KeyPtrs[1].Next.Keys)
-
-	// fmt.Println("Leafs (3rd Layer)")
-	// for i := range tree.Root.Keys {
-	// 	fmt.Println("      ", tree.Root.KeyPtrs[1].Keys[i])
-	// }
-
-	// tree_json := string(b)
-	// fmt.Println("new tree: ", tree_json)
-	// for i := range string(b) {
-	// 	fmt.Println(i)
-	// }
-
-	fmt.Println("")
-	fmt.Println("Testing finished!!")
-	fmt.Println("==============================================================================")
-
-	return
-}
-
-func TestBorrow(t *testing.T) {
-	llNodes := initRecordLLNodes()
-	// tree := initTree(llNodes)
-
-	// b, _ := json.Marshal(llNodes)
-	// t.Logf("nodes: %v", string(b))
-	// var n1KeyPtr, n2KeyPtr []*index.BPNode
-	// n1KeyPtr = append(n1KeyPtr, &index.BPNode{
-	// 	IsLeaf:     true,
-	// 	Keys:       []uint32{0, 1},
-	// 	RecordPtrs: []*index.RecordLLNode{llNodes[0], llNodes[1]},
-	// })
-	// n1KeyPtr = append(n1KeyPtr, &index.BPNode{
-	// 	IsLeaf:     true,
-	// 	Keys:       []uint32{2, 3},
-	// 	RecordPtrs: []*index.RecordLLNode{llNodes[2], llNodes[3]},
-	// })
-	// n1KeyPtr = append(n1KeyPtr, &index.BPNode{
-	// 	IsLeaf:     true,
-	// 	Keys:       []uint32{4},
-	// 	RecordPtrs: []*index.RecordLLNode{llNodes[4]},
-	// })
-
-	// node1 := &index.BPNode{
-	// 	IsLeaf: false,
-	// 	Keys:   []uint32{2, 4},
-	// 	// RecordPtrs: []*index.RecordLLNode{llNodes[3]},
-	// 	KeyPtrs: n1KeyPtr,
-	// }
-
-	// n2KeyPtr = append(n2KeyPtr, &index.BPNode{
-	// 	IsLeaf:     true,
-	// 	Keys:       []uint32{5},
-	// 	RecordPtrs: []*index.RecordLLNode{llNodes[5]},
-	// })
-
-	// n2KeyPtr = append(n2KeyPtr, &index.BPNode{
-	// 	IsLeaf:     true,
-	// 	Keys:       []uint32{6},
-	// 	RecordPtrs: []*index.RecordLLNode{llNodes[6]},
-	// })
-	// node2 := &index.BPNode{
-	// 	IsLeaf: false,
-	// 	Keys:   []uint32{6},
-	// 	// RecordPtrs: llNodes[:3],
-	// 	KeyPtrs: n2KeyPtr,
-	// }
-
-	// node2.BorrowKeyFromNode(node1)
-	// n1, _ := json.Marshal(node1)
-	// n2, _ := json.Marshal(node2)
-	// t.Logf("Node1: %v", string(n1))
-	// t.Logf("Node2: %v", string(n2))
 	parent := &index.BPNode{
 		IsLeaf: false,
 	}
@@ -180,6 +239,11 @@ func TestBorrow(t *testing.T) {
 	parent.KeyPtrs = []*index.BPNode{leaf1, leaf2}
 
 	leaf2.BorrowKeyFromNode(leaf1, true)
+	fmt.Println(" \nTest finished!")
+
+	fmt.Println(" \n----------------------------")
+
+	// Print tree
 	leaf1.ParentNode = nil
 	leaf2.ParentNode = nil
 	p, _ := json.Marshal(parent)
