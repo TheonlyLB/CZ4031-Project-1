@@ -248,7 +248,7 @@ func (diskObject *Disk) RetrieveRecord(recordLocationObject RecordLocation) Reco
 	interestedBlock = diskObject.BlockArray[recordLocationObject.BlockIndex]
 	recordArray, _ = BlockToRecord(interestedBlock)
 	recordObject = recordArray[recordLocationObject.RecordIndex]
-	fmt.Println("Retrieved record")
+	// fmt.Println("Retrieved record")
 	return recordObject
 }
 
@@ -302,4 +302,37 @@ func (diskObject *Disk) RetrieveAll() []RecordLocationNumVotes {
 		res = append(res, recrdLocNumVotes)
 	}
 	return res
+}
+
+// Brute force solution for getting records given range of numVotes
+// hardcoded numvotes size
+func (diskObject *Disk) BruteForceSearch(rangeNumVotes [2]uint32) ([]Record, int) {
+	var resRecords []Record
+	var numBlocksAccessed int = 0
+	for i := 0; i < int(diskObject.BlockIndex); i++ {
+		numBlocksAccessed++
+		var curBlock = diskObject.BlockArray[i]
+		for j := uint8(0); j < curBlock.NumRecord; j++ {
+			var curRecLoc = RecordLocation{BlockIndex: uint32(i), RecordIndex: j}
+			// check if current record location is in deleted array
+			if diskObject.isInDeletedArray(curRecLoc) {
+				continue
+			}
+			// check if satisfies condition
+			if diskObject.RetrieveRecord(curRecLoc).NumVotes >= rangeNumVotes[0] && diskObject.RetrieveRecord(curRecLoc).NumVotes <= rangeNumVotes[1] {
+				// append to result
+				resRecords = append(resRecords, diskObject.RetrieveRecord(curRecLoc))
+			}
+		}
+	}
+	return resRecords, numBlocksAccessed
+}
+
+func (diskObject *Disk) isInDeletedArray(recordLocation RecordLocation) bool {
+	for k := 0; k < len(diskObject.DeletedArray); k++ {
+		if diskObject.DeletedArray[k].BlockIndex == recordLocation.BlockIndex && diskObject.DeletedArray[k].RecordIndex == recordLocation.RecordIndex {
+			return true
+		}
+	}
+	return false
 }
