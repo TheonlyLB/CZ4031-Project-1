@@ -48,6 +48,118 @@ func initTree(nodes []*index.RecordLLNode) *index.BPTree {
 	return tree
 }
 
+func TestDelete(t *testing.T) {
+	fmt.Println("==============================================================================")
+	fmt.Println("Initializing mock tree....")
+	fmt.Println("")
+	testNodes := initRecordLLNodes()
+	tree := initTree(testNodes)
+	fmt.Println("testNodes", testNodes)
+	fmt.Println("First test Node", testNodes[0].RecordInfo)
+	fmt.Println("Initial Tree at", tree)
+	fmt.Println("Initial Root node", tree.Root)
+	fmt.Println(tree.Root.KeyPtrs[0].Keys)
+	fmt.Println(" \n----------------------------")
+
+	fmt.Println("Testing starts...")
+	fmt.Println("")
+	tree.Delete(5)
+	// llNodes := initRecordLLNodes()
+
+	// parent := &index.BPNode{
+	// 	IsLeaf: false,
+	// }
+	// leaf1 := &index.BPNode{
+	// 	IsLeaf:     true,
+	// 	Keys:       []uint32{2, 3},
+	// 	RecordPtrs: []*index.RecordLLNode{testNodes[2], testNodes[3]},
+	// 	ParentNode: parent,
+	// }
+	// leaf2 := &index.BPNode{
+	// 	IsLeaf:     true,
+	// 	Keys:       []uint32{4},
+	// 	RecordPtrs: []*index.RecordLLNode{testNodes[4]},
+	// 	ParentNode: parent,
+	// }
+	// parent.Keys = []uint32{4}
+	// parent.KeyPtrs = []*index.BPNode{leaf1, leaf2}
+
+	// leaf2.BorrowKeyFromNode(leaf1, true)
+	fmt.Println(" \nTest finished!")
+
+	fmt.Println(" \n----------------------------")
+
+	// Print tree
+	// leaf1.ParentNode = nil
+	// leaf2.ParentNode = nil
+	// p, _ := json.Marshal(parent)
+	// t.Logf("parent: %v", string(p))
+
+	/////////////////////////////////////////////////////////////
+	////// Final Tree
+	b, _ := json.Marshal(tree.Root)
+
+	fmt.Println(string(b))
+	fmt.Println("Total number of test values: ", TEST_NUM)
+	PrintTree(tree)
+
+	fmt.Println("")
+	fmt.Println("Testing finished!!")
+	fmt.Println("==============================================================================")
+
+	return
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func PrintTree(tree *index.BPTree) {
+	fmt.Println("\nRoot: ", tree.Root)
+
+	layerNo := 0
+	nextLayer := true
+	fmt.Println("\nRoot,  //layer", layerNo)
+	fmt.Println("        ", tree.Root.Keys)
+
+	tempParentNodeList := make([]*index.BPNode, 0)
+	tempParentNodeList = append(tempParentNodeList, tree.Root)
+	tempNodeWithChildList := make([]*index.BPNode, 0)
+	for nextLayer {
+		// fmt.Println(tempParentNodeList)
+		for i := range tempParentNodeList {
+			// fmt.Println(i)
+			// fmt.Println("Lenth of list", len(tempParentNodeList))
+
+			// fmt.Println(tempParentNodeList[i].KeyPtrs)
+			if len(tempParentNodeList[i].KeyPtrs) > 0 {
+				for j := range tempParentNodeList[i].KeyPtrs {
+					tempNodeWithChildList = append(tempNodeWithChildList, tempParentNodeList[i].KeyPtrs[j])
+				}
+			}
+			// tempParentNodeList = tempNodeWithChildList
+			// if len(tempParentNodeList) == 0 {
+			// 	fmt.Println("break")
+			// 	nextLayer = false
+			// 	break
+			// }
+		}
+		if len(tempParentNodeList) == 0 {
+			// fmt.Println("break")
+			nextLayer = false
+			fmt.Println("break")
+
+			break
+		}
+		tempParentNodeList = tempNodeWithChildList
+		layerNo += 1
+		fmt.Println("Nodes, //layer", layerNo, "")
+		for k := range tempParentNodeList {
+			fmt.Println("        ", tempParentNodeList[k].Keys)
+		}
+		tempNodeWithChildList = nil
+
+	}
+}
+
 // func TestIndex(t *testing.T) {
 // 	fmt.Println("==============================================================================")
 // 	fmt.Println("Initializing mock tree....")
@@ -201,111 +313,3 @@ func initTree(nodes []*index.RecordLLNode) *index.BPTree {
 //		p, _ := json.Marshal(parent)
 //		t.Logf("parent: %v", string(p))
 //	}
-func TestDelete(t *testing.T) {
-	fmt.Println("==============================================================================")
-	fmt.Println("Initializing mock tree....")
-	fmt.Println("")
-	testNodes := initRecordLLNodes()
-	tree := initTree(testNodes)
-	fmt.Println("testNodes", testNodes)
-	fmt.Println("First test Node", testNodes[0].RecordInfo)
-	fmt.Println("Initial Tree at", tree)
-	fmt.Println("Initial Root node", tree.Root)
-	fmt.Println(tree.Root.KeyPtrs[0].Keys)
-	fmt.Println(" \n----------------------------")
-
-	fmt.Println("Testing starts...")
-	fmt.Println("")
-	// llNodes := initRecordLLNodes()
-
-	parent := &index.BPNode{
-		IsLeaf: false,
-	}
-	leaf1 := &index.BPNode{
-		IsLeaf:     true,
-		Keys:       []uint32{2, 3},
-		RecordPtrs: []*index.RecordLLNode{testNodes[2], testNodes[3]},
-		ParentNode: parent,
-	}
-	leaf2 := &index.BPNode{
-		IsLeaf:     true,
-		Keys:       []uint32{4},
-		RecordPtrs: []*index.RecordLLNode{testNodes[4]},
-		ParentNode: parent,
-	}
-	parent.Keys = []uint32{4}
-	parent.KeyPtrs = []*index.BPNode{leaf1, leaf2}
-
-	leaf2.BorrowKeyFromNode(leaf1, true)
-	fmt.Println(" \nTest finished!")
-
-	fmt.Println(" \n----------------------------")
-
-	// Print tree
-	// leaf1.ParentNode = nil
-	// leaf2.ParentNode = nil
-	// p, _ := json.Marshal(parent)
-	// t.Logf("parent: %v", string(p))
-
-	/////////////////////////////////////////////////////////////
-	////// Final Tree
-	b, _ := json.Marshal(tree.Root)
-
-	fmt.Println(string(b))
-	fmt.Println("Total number of test values: ", TEST_NUM)
-	PrintTree(tree)
-
-	fmt.Println("")
-	fmt.Println("Testing finished!!")
-	fmt.Println("==============================================================================")
-
-	return
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func PrintTree(tree *index.BPTree) {
-	fmt.Println("\nRoot: ", tree.Root)
-
-	layerNo := 0
-	nextLayer := true
-	fmt.Println("\nRoot,  //layer", layerNo)
-	fmt.Println("        ", tree.Root.Keys)
-
-	tempParentNodeList := make([]*index.BPNode, 0)
-	tempParentNodeList = append(tempParentNodeList, tree.Root)
-	tempNodeWithChildList := make([]*index.BPNode, 0)
-	for nextLayer {
-		// fmt.Println(tempParentNodeList)
-		for i := range tempParentNodeList {
-			// fmt.Println(i)
-			// fmt.Println("Lenth of list", len(tempParentNodeList))
-
-			// fmt.Println(tempParentNodeList[i].KeyPtrs)
-			if len(tempParentNodeList[i].KeyPtrs) > 0 {
-				for j := range tempParentNodeList[i].KeyPtrs {
-					tempNodeWithChildList = append(tempNodeWithChildList, tempParentNodeList[i].KeyPtrs[j])
-				}
-			}
-			// tempParentNodeList = tempNodeWithChildList
-			// if len(tempParentNodeList) == 0 {
-			// 	fmt.Println("break")
-			// 	nextLayer = false
-			// 	break
-			// }
-		}
-		if len(tempParentNodeList) == 0 {
-			// fmt.Println("break")
-			nextLayer = false
-			break
-		}
-		tempParentNodeList = tempNodeWithChildList
-		layerNo += 1
-		fmt.Println("Nodes, //layer", layerNo, "")
-		for k := range tempParentNodeList {
-			fmt.Println("        ", tempParentNodeList[k].Keys)
-		}
-		tempNodeWithChildList = nil
-
-	}
-}
