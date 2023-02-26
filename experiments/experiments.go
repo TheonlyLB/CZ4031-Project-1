@@ -4,6 +4,7 @@ import (
 	"CZ4031_Project_1/index"
 	"CZ4031_Project_1/storage"
 	"fmt"
+	"time"
 )
 
 func Experiments(blockSize uint8) {
@@ -50,4 +51,30 @@ func Experiments(blockSize uint8) {
 	fmt.Printf("Number of Levels: %v\n", tree.NumLevels())
 	fmt.Println("Content of root node:\n")
 	fmt.Printf("%v\n", tree.Root.Keys)
+
+	/*
+		Experiment 3: retrieve those movies with the numVotes equal to 500 and report the following statistics
+		• the number of index nodes the process accesses;
+		• the number of data blocks the process accesses;
+		• the average of “averageRating’s” of the records that are returned;
+		• the running time of the retrieval process (please specify the method
+		you use for measuring the running time of a piece of code)
+		• the number of data blocks that would be accessed by a brute-force
+		linear scan method (i.e., it scans the data blocks one by one) and its
+		running time (for comparison)
+	*/
+	// bruteforce search
+	var search = [2]uint32{500, 500}
+	start := time.Now()
+	var _, bruteBlocksAccessed = disk.BruteForceSearch(search)
+	t := time.Now()
+	elapsedBruteForce := t.Sub(start)
+	fmt.Println("=== Experiment 3 ===")
+	// search tree for numVotes equal 500
+	fmt.Printf("Number for index nodes the process access: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Number for data blocks the process access: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Average of 'averageRatings' of records returned: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Running time of retrieval initialised (difference in monotonic clock before and after the function call): %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Number of data blocks accessed by brute-force linear scan: %d\n", bruteBlocksAccessed)
+	fmt.Printf("Running time of brute-force linear scan: %v\n", elapsedBruteForce)
 }

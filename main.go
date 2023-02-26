@@ -1,8 +1,6 @@
 package main
 
-import (
-	"CZ4031_Project_1/experiments"
-)
+import "CZ4031_Project_1/experiments"
 
 func main() {
 	// run experiments.go
@@ -10,7 +8,7 @@ func main() {
 }
 
 /*
-// initialise disk
+	// initialise disk
 	fmt.Println("Initialising disk and record")
 	var diskObject storage.Disk
 	var recordLocation storage.RecordLocation
@@ -27,4 +25,5 @@ func main() {
 	fmt.Println(diskObject.RetrieveAll())
 	diskObject.DeleteRecord(recordLocation)
 	fmt.Println(diskObject.RetrieveAll())
+}
 */
