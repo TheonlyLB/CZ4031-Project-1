@@ -424,6 +424,7 @@ func (node *BPNode) insertKeyIntoParent(newNode *BPNode) (*BPNode, bool) {
 
 func (node *BPNode) insertIntoParentWithoutSplit(insertNode *BPNode) *BPNode {
 	// fmt.Println("Old parent node is not full, can modify direcly")
+	node.ParentNode = insertNode.ParentNode
 	fmt.Println("Node to be inserted to parent, ", insertNode)
 	val := insertNode.Keys[0]
 	fmt.Println("keyt[0] ", val)
