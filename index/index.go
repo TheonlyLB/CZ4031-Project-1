@@ -400,6 +400,7 @@ func (tree *BPTree) deleteKey(node *BPNode, key uint32) {
 	node.deleteKeyFromNode(key)
 	// // If the leafNode is the root node, we need to check if the leafNode has any keys
 	if tree.Root == node {
+		fmt.Println("Key exists in the root! ")
 		keyLen := len(node.Keys)
 		if keyLen == 0 && node.IsLeaf {
 			tree.Root = nil
@@ -473,9 +474,13 @@ func (tree *BPTree) rebalance(node *BPNode) {
 }
 
 func (tree *BPTree) Merge(node *BPNode, mergeIntoNode *BPNode, isLeft bool) {
-	tempKeys := make([]uint32, len(node.Keys))
+	tempKeys := make([]uint32, len(node.Keys)+len(mergeIntoNode.Keys))
 	mergeIntoKeyLen := len(mergeIntoNode.Keys)
 	nodeKeyLen := len(node.Keys)
+	fmt.Println("\nmergeIntoKeyLen", mergeIntoKeyLen)
+	fmt.Println("mergeIntoKeyLen", mergeIntoNode.Keys)
+	fmt.Println("mergeIntoNodes", node)
+
 	if node.IsLeaf {
 		tempPtrs := make([]*RecordLLNode, len(node.RecordPtrs))
 		if isLeft {
