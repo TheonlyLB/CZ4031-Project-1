@@ -318,13 +318,17 @@ func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) *BPNode {
 
 func (tree *BPTree) Delete(key uint32) {
 	leafNode := tree.findLeafFromTree(key)
-	if leafNode == nil {
-		return
-	} else {
+	keyExists := false
+	for k := range leafNode.Keys {
+		if uint32(k) == key {
+			keyExists = true
+		}
+	}
+
+	if keyExists {
 		tree.deleteKey(leafNode, key)
 	}
 }
-
 func (tree *BPTree) deleteKey(node *BPNode, key uint32) {
 	node.deleteKeyFromNode(key)
 	// // If the leafNode is the root node, we need to check if the leafNode has any keys
