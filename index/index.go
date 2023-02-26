@@ -380,14 +380,18 @@ func (node *BPNode) insertIntoParentWithSplit(insertNode *BPNode) *BPNode {
 }
 
 func (tree *BPTree) Delete(key uint32) {
+	fmt.Print("DELETING KEY ", key, "......")
 	leafNode := tree.findLeafFromTree(key)
 	keyExists := false
-	for k := range leafNode.Keys {
+	for idx, k := range leafNode.Keys {
+		// fmt.Println("k: ", k)
+		fmt.Println("idx:k", idx, k)
+
 		if uint32(k) == key {
 			keyExists = true
 		}
 	}
-
+	fmt.Println("keyExists: ", keyExists)
 	if keyExists {
 		tree.deleteKey(leafNode, key)
 	}
