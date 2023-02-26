@@ -19,7 +19,9 @@ func (tree *BPTree) CreateIndex() *BPTree {
 
 func (tree *BPTree) Insert(recordLoc *storage.RecordLocation, val uint32) {
 	// if no root, create leaf node -> insert record -> end
+	fmt.Println("Initial Tree root: ", tree.Root)
 	if tree.Root == nil {
+		fmt.Println("Current no tree root, creating a node now")
 		leafNode := NewBPNode(true)
 		leafNode.Keys = append(leafNode.Keys, val)
 		recordPtr := &RecordLLNode{
@@ -29,16 +31,18 @@ func (tree *BPTree) Insert(recordLoc *storage.RecordLocation, val uint32) {
 
 		leafNode.RecordPtrs = append(leafNode.RecordPtrs, recordPtr)
 		tree.Root = leafNode
-
+		fmt.Println("Initial Tree root Created: ", tree.Root)
+		fmt.Println("--------------------------------")
 	}
 
-	fmt.Println("Tree has existing root, perform Insert now...")
+	fmt.Println("\nTree has existing root at: ", tree.Root, "\nPerform Insert now...")
 
 	leafNode := tree.findLeafFromTree(val)
 	newRoot := leafNode.InsertValIntoLeaf(recordLoc, val)
 	if newRoot != nil {
 		tree.Root = newRoot
 	}
+	fmt.Println("\n *****************************************")
 
 }
 
@@ -180,10 +184,12 @@ func (node *BPNode) InsertValIntoLeaf(recordLoc *storage.RecordLocation, val uin
 		// return errors.New("[InsertValIntoLeaf] Node is not a leaf node")
 		fmt.Println("Error: [InsertValIntoLeaf] Node is not a leaf node")
 	}
-
+	fmt.Println("Key ranges: ", node.Keys)
+	fmt.Println("Val: ", val)
 	for i, key := range node.Keys {
 		if key == val {
 			// Found existing key -> insert into linked list
+			fmt.Println("Duplicate key! Append to linked list")
 			record := node.RecordPtrs[i]
 			record.InsertRecordToLinkedList(recordLoc)
 			return nil
@@ -241,22 +247,56 @@ func getInsertIndex(keyList []uint32, val uint32) int {
 
 func (node *BPNode) insertIntoLeafWithoutSplitting(recordLoc *storage.RecordLocation, val uint32) *BPNode {
 	index := getInsertIndex(node.Keys, val)
+	// nodeTemp := node
+	fmt.Println("Index: i", index)
 	var newKeyList []uint32
 	var newRecordPtrs []*RecordLLNode
 
-	newKeyList = node.Keys[:index]
-	newKeyList = append(newKeyList, val)
-	newKeyList = append(newKeyList, node.Keys[index:]...)
+	origKeys := node.Keys
+
+	// fmt.Println("\nAll current keys in node temp: ", node.Keys)
+	// fmt.Println("Node now: ", node)
+	// newKeyList = node.Keys[:index]
+	// fmt.Println("New Keys left: ", newKeyList)
+
+	// fmt.Println("\nAll current keys: ", node.Keys)
+	// fmt.Println("Node now: ", node)
+	// newKeyList2 := append(newKeyList, val)
+	// fmt.Println("New Keys mid: ", newKeyList)
+	// node.Keys = origKeys
+
+	// fmt.Println("\nAll current keys: ", node.Keys)
+	// fmt.Println("Orig keys: ", origKeys)
+	// fmt.Println("Node now: ", node)
+	// newKeyList3 := append(newKeyList2, node.Keys[index:]...)
+	// fmt.Println("New Keys to append right: ", node.Keys[index:])
+	// fmt.Println("New Keys right: ", newKeyList3)
+	newKeyList = origKeys
+	fmt.Println("\nOrig keylist: ", newKeyList)
+	if len(newKeyList) == index {
+		newKeyList = append(newKeyList, val)
+	} else {
+		newKeyList = append(newKeyList[:index+1], newKeyList[index:]...)
+		newKeyList[index] = val
+	}
+
+	fmt.Println("Updated keylist: ", newKeyList)
+
 	node.Keys = newKeyList
 
 	newRecord := RecordLLNode{
 		RecordInfo: recordLoc,
 		Next:       nil,
 	}
-	newRecordPtrs = node.RecordPtrs[:index]           //len 4
+	newRecordPtrs = node.RecordPtrs[:index] //len 4
+	fmt.Println("nNew Record Ptrs left: ", newRecordPtrs)
 	newRecordPtrs = append(newRecordPtrs, &newRecord) //len 5
+	fmt.Println("New Record Ptrs mid: ", newRecordPtrs)
+
 	//panic: runtime error: slice bounds out of range [4:3]
 	newRecordPtrs = append(newRecordPtrs, node.RecordPtrs[index:]...)
+	fmt.Println("New Record Ptrs right: ", newRecordPtrs)
+
 	node.RecordPtrs = newRecordPtrs
 
 	return node
@@ -264,13 +304,25 @@ func (node *BPNode) insertIntoLeafWithoutSplitting(recordLoc *storage.RecordLoca
 
 func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, val uint32) *BPNode {
 	index := getInsertIndex(node.Keys, val)
+	fmt.Println("Insert at index: ", index)
 	var (
 		allKeysList   []uint32
 		allRecordPtrs []*RecordLLNode
 	)
+
+	fmt.Println("Original All key list: ", node.Keys)
+
 	allKeysList = node.Keys[:index]
-	allKeysList = append(allKeysList, val)
-	allKeysList = append(allKeysList, node.Keys[index:]...)
+
+	if len(allKeysList) == index {
+		allKeysList = append(allKeysList, val)
+	} else {
+		allKeysList = append(allKeysList[:index+1], allKeysList[index:]...)
+		allKeysList[index] = val
+	}
+	// allKeysList = append(allKeysList, val)
+	// allKeysList = append(allKeysList, node.Keys[index:]...)
+	fmt.Println("New All key list: ", node.Keys)
 
 	newRecord := RecordLLNode{
 		RecordInfo: recordLoc,
@@ -279,10 +331,14 @@ func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, v
 	allRecordPtrs = node.RecordPtrs[:index]
 	// fmt.Println("1 All recordptrslist: ", allRecordPtrs)
 	allRecordPtrs = append(allRecordPtrs, &newRecord)
+	fmt.Println("All key list: ", node.Keys)
+
 	// fmt.Println("1 All recordptrslist: ", allRecordPtrs)
 	// allRecordPtrs = append(allRecordPtrs, node.RecordPtrs[index:]...)
+	fmt.Println("All key list: ", node.Keys)
 
 	numOfLeftKeys := math.Ceil((float64(MAX_NUM_KEYS) + 1) / 2)
+	fmt.Println("All key list: ", node.Keys)
 
 	// Current node will be made as the left node
 	newRightNode := NewBPNode(node.IsLeaf)
@@ -290,13 +346,19 @@ func (node *BPNode) insertIntoLeafWithSplit(recordLoc *storage.RecordLocation, v
 
 	// newRightNode.Next = node.Next
 	// node.Next = newRightNode
-
-	newRightNode.Keys = allKeysList[int(numOfLeftKeys):]
-	newRightNode.RecordPtrs = allRecordPtrs[int(numOfLeftKeys):]
+	fmt.Println("All key list: ", node.Keys)
+	fmt.Print("Nof left keys: ", numOfLeftKeys)
+	fmt.Print("All record ptrs: ", allRecordPtrs)
+	// allKeysListCopy := node.Keys
+	// allRecordPtrsCopy := node.RecordPtrs
+	fmt.Println("Right node keys: ", allKeysListCopy[int(numOfLeftKeys):])
+	newRightNode.Keys = allKeysListCopy[int(numOfLeftKeys):]
+	newRightNode.RecordPtrs = allRecordPtrsCopy[int(numOfLeftKeys):]
+	fmt.Print("New Right Node info: ", newRightNode)
 
 	fmt.Println("...updating current node info")
-	fmt.Println("All key list: ", allKeysList)
-	fmt.Println("All recordptrslist: ", allRecordPtrs)
+	// fmt.Println("All key list: ", allKeysList)
+	// fmt.Println("All recordptrslist: ", allRecordPtrs)
 
 	node.Keys = allKeysList[:int(numOfLeftKeys)]
 	node.RecordPtrs = allRecordPtrs[:int(numOfLeftKeys)]
