@@ -484,7 +484,7 @@ func (node *BPNode) insertIntoParentWithoutSplit(insertNode *BPNode) *BPNode {
 	node.ParentNode.Keys = append(node.ParentNode.Keys, insertNode.Keys[0])
 
 	node.ParentNode.KeyPtrs = append(node.ParentNode.KeyPtrs, insertNode)
-	node.ParentNode.RecordPtrs = append(node.ParentNode.RecordPtrs, insertNode.RecordPtrs[0])
+	// node.ParentNode.RecordPtrs = append(node.ParentNode.RecordPtrs, insertNode.RecordPtrs[0])
 	fmt.Println("Updated parent node: ", node.ParentNode)
 	// index := getInsertIndex(node.Keys, newKey)
 	// var (
