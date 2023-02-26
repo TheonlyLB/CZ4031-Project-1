@@ -19,6 +19,7 @@ func (tree *BPTree) CreateIndex() *BPTree {
 
 func (tree *BPTree) Insert(recordLoc *storage.RecordLocation, val uint32) {
 	// if no root, create leaf node -> insert record -> end
+	fmt.Println("\nINSERTING KEY ", val)
 	fmt.Println("Initial Tree root: ", tree.Root)
 	if tree.Root == nil {
 		fmt.Println("Current no tree root, creating a node now")
@@ -51,9 +52,13 @@ func (tree *BPTree) findLeafFromTree(key uint32) *BPNode {
 	currNode := tree.Root
 	foundChild := false
 	for !currNode.IsLeaf {
-		// fmt.Println("Curretn Node", currNode)
+		fmt.Println("Curretn Node", currNode)
 		for keyIdx, keyVal := range currNode.Keys {
-			// fmt.Println("Debug 2")
+			fmt.Println("Key val, keyIdx", keyVal, "id", keyIdx)
+			fmt.Println("idx1", currNode.KeyPtrs[1])
+			fmt.Println("idx2", currNode.KeyPtrs[keyIdx+1])
+			fmt.Println("idx-1", currNode.KeyPtrs[0])
+
 			if key <= keyVal {
 				currNode = currNode.KeyPtrs[keyIdx]
 				fmt.Println(currNode)
@@ -66,10 +71,14 @@ func (tree *BPTree) findLeafFromTree(key uint32) *BPNode {
 		}
 		if !foundChild {
 			// fmt.Println("Debug 3")
-			// fmt.Println("\ncrrNodes", currNode)
+			fmt.Println("\nfindleafcurrNode", currNode)
 			// fmt.Println("crrNodes last ptrs", currNode.KeyPtrs[len(currNode.Keys)])
+			if currNode.Next == nil {
+				currNode = currNode.KeyPtrs[0]
+			} else {
+				currNode = currNode.Next
+			}
 
-			currNode = currNode.KeyPtrs[len(currNode.Keys)]
 			// fmt.Println("2- current Node", currNode)
 
 			// fmt.Println("Debug 3.2")
@@ -80,6 +89,8 @@ func (tree *BPTree) findLeafFromTree(key uint32) *BPNode {
 	// fmt.Println("Debug 5")
 
 	fmt.Println("Node to be inserted to: ", currNode)
+	fmt.Println("Node is leaf: ", currNode.IsLeaf)
+
 	fmt.Println("Current Keys: ", currNode.Keys)
 	fmt.Println("Current KeysPtrs: ", currNode.KeyPtrs)
 
@@ -101,7 +112,9 @@ func (node *BPNode) InsertValIntoLeaf(recordLoc *storage.RecordLocation, val uin
 			fmt.Println("Duplicate key! Append to linked list")
 			record := node.RecordPtrs[i]
 			record.InsertRecordToLinkedList(recordLoc)
-			return nil
+			root := node.FindRoot()
+			return root
+
 		}
 	}
 
@@ -143,7 +156,7 @@ func getInsertIndex(keyList []uint32, val uint32) int {
 	insertIndex := 0
 	found := false
 	for idx, key := range keyList {
-		if val < key {
+		if val <= key {
 			insertIndex = idx
 			found = true
 			break
@@ -379,19 +392,23 @@ func (node *BPNode) insertIntoParentWithoutSplit(insertNode *BPNode) *BPNode {
 	newKeyList := origKeyList
 	fmt.Println("Orig keylist: ", newKeyList)
 
+	fmt.Println("\nOrig key list (parent): ", origKeyList)
+	fmt.Println("Orig keyptr list(parent): ", origKeyPtrsList)
 	if len(newKeyList) == index {
 		newKeyList = append(newKeyList, val)
 	} else {
 		newKeyList = append(newKeyList[:index+1], newKeyList[index:]...)
 		newKeyList[index] = val
 	}
-
+	// fmt.Println("\nOrig key list (parent): ", origKeyList)
+	// fmt.Println("Orig keyptr list(parent): ", origKeyPtrsList)
 	newKeyPtrsList := origKeyPtrsList
 	if len(newKeyList) == index {
 		newKeyPtrsList = append(newKeyPtrsList, insertNode)
 	} else {
 		newKeyPtrsList = append(newKeyPtrsList[:index+1], newKeyPtrsList[index:]...)
-		newKeyPtrsList[index] = insertNode
+		fmt.Println("Orig keyptr list(temp parent): ", newKeyPtrsList[:index+1], newKeyPtrsList[index:])
+		newKeyPtrsList[index+1] = insertNode
 	}
 
 	// node.ParentNode.Keys = append(node.ParentNode.Keys, insertNode.Keys[0])
@@ -400,6 +417,10 @@ func (node *BPNode) insertIntoParentWithoutSplit(insertNode *BPNode) *BPNode {
 
 	node.ParentNode.Keys = newKeyList
 	node.ParentNode.KeyPtrs = newKeyPtrsList
+	fmt.Println("new key list (parent)", node.ParentNode.Keys)
+	fmt.Println("new key PTR list (parent)", node.ParentNode.KeyPtrs)
+	fmt.Println("new key first child (parent)", node.ParentNode.KeyPtrs[0])
+
 	// node.ParentNode.RecordPtrs = append(node.ParentNode.RecordPtrs, insertNode.RecordPtrs[0])
 	fmt.Println("Updated parent node: ", node.ParentNode)
 
