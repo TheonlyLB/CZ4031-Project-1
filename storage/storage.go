@@ -24,7 +24,8 @@ const (
 	tConstLength        = 10
 	averageRatingLength = 1
 	numVotesLength      = 4
-	RecordLength        = tConstLength + averageRatingLength + numVotesLength
+	deletedLength       = 1
+	RecordLength        = tConstLength + averageRatingLength + numVotesLength + deletedLength
 )
 
 type Disk struct {
