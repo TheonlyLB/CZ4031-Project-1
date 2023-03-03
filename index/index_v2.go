@@ -45,51 +45,6 @@ func (tree *BPTree) Insert(key uint32, addr *storage.RecordLocation) {
 // 	return nil
 // }
 
-// func (tree *BPTree) SearchRange(fromKey uint32, toKey uint32, verbose bool) []*byte {
-// 	var records []*byte
-// 	node, count := tree.locateLeaf(fromKey, verbose)
-
-// 	// Process first node
-// 	for i, item := range node.Key {
-// 		if item == 0 {
-// 			break
-// 		}
-// 		if item >= fromKey {
-// 			records = append(records, node.DataPtr[i].extractDuplicateKeyRecords()...)
-// 		}
-// 	}
-// 	node = node.Next
-
-// 	for node != nil {
-// 		count += 1
-
-// 		if verbose {
-// 			if count <= 5 {
-// 				fmt.Printf("Node content: %v\n", node.Key)
-// 			}
-// 		}
-
-// 		for i, item := range node.Key {
-// 			if item == 0 || item > toKey {
-// 				break
-// 			}
-// 			records = append(records, node.DataPtr[i].extractDuplicateKeyRecords()...)
-// 		}
-
-// 		if node.Key[node.getKeySize()-1] >= toKey {
-// 			// Range reached
-// 			break
-// 		}
-// 		node = node.Next
-
-// 	}
-// 	if verbose {
-// 		fmt.Printf("Total index node accessed: %v\n", count)
-// 	}
-// 	return records
-
-// }
-
 func (tree *BPTree) Delete(key uint32) {
 	node, _ := tree.locateLeaf(key, false)
 	tree.deleteKey(node, key)
@@ -734,6 +689,51 @@ func (tree *BPTree) Search(config SearchConfig, verbose bool) []*storage.RecordL
 	}
 	return nil
 }
+
+//func (tree *BPTree) SearchRange(fromKey uint32, toKey uint32, verbose bool) []*storage.RecordLocation {
+//	var records []*storage.RecordLocation
+//	node, count := tree.locateLeaf(fromKey, verbose)
+//
+//	// Process first node
+//	for i, item := range node.Key {
+//		if item == 0 {
+//			break
+//		}
+//		if item >= fromKey {
+//			records = append(records, node.DataPtr[i].extractDuplicateKeyRecords()...)
+//		}
+//	}
+//	node = node.Next
+//
+//	for node != nil {
+//		count += 1
+//
+//		if verbose {
+//			if count <= 5 {
+//				fmt.Printf("Node content: %v\n", node.Key)
+//			}
+//		}
+//
+//		for i, item := range node.Key {
+//			if item == 0 || item > toKey {
+//				break
+//			}
+//			records = append(records, node.DataPtr[i].extractDuplicateKeyRecords()...)
+//		}
+//
+//		if node.Key[node.getKeySize()-1] >= toKey {
+//			// Range reached
+//			break
+//		}
+//		node = node.Next
+//
+//	}
+//	if verbose {
+//		fmt.Printf("Total index node accessed: %v\n", count)
+//	}
+//	return records
+//
+//}
 
 func (recordNode *RecordLLNode) getRecordsFromLinkedList() []*storage.RecordLocation {
 	res := []*storage.RecordLocation{recordNode.RecordInfo}

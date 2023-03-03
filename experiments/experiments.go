@@ -53,7 +53,7 @@ func Experiments(blockSize uint8) {
 	fmt.Println("B+ Tree Constructed")
 
 	// fmt.Println("=== Experiment 2 ===")
-	// fmt.Printf("Order/Branching Factor n: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Order/Branching Factor n: %d\n", index.MAX_NUM_KEYS)
 	fmt.Printf("Tree height: %v\n", tree.GetHeight())
 	fmt.Printf("Number of nodes: %v\n", tree.GetTotalNodes())
 	fmt.Printf("Root Key: %v\n", tree.Root.Key)
@@ -67,13 +67,13 @@ func Experiments(blockSize uint8) {
 		• the number of data blocks that would be accessed by a brute-force linear scan method (i.e., it scans the data blocks one by one) and its running time (for comparison)
 	*/
 
-	// TODO insert tree search here
-	exp2Query := index.SearchConfig{
+	// TODO insert tree search here (Done)
+	exp3Query := index.SearchConfig{
 		Type:   index.ValueQuery,
 		Values: []uint32{500},
 	}
-	recordLocations := tree.Search(exp2Query, true)
-	fmt.Printf("No. of RecordLocations: %v\n", len(recordLocations))
+	recordLocationArray := tree.Search(exp3Query, true)
+	fmt.Printf("No. of RecordLocations: %v\n", len(recordLocationArray))
 
 	// bruteforce search
 	// var search = [2]uint32{500, 500}
@@ -97,8 +97,22 @@ func Experiments(blockSize uint8) {
 		• the running time of the retrieval process;
 		• the number of data blocks that would be accessed by a brute-force linear scan method (i.e., it scans the data blocks one by one) and its running time (for comparison)
 	*/
-	// TODO insert tree range search here
+	// TODO insert tree range search here (Done)
+	type SearchConfig struct {
+		Type   string // RangeQuery or Value query
+		Values []uint32
+	}
+	var valueArray []uint32
+	for i := 30000; i <= 40000; i++ {
+		valueArray = append(valueArray, uint32(i))
+	}
+	exp4Query := index.SearchConfig{
+		Type:   index.RangeQuery,
+		Values: valueArray,
+	}
+	recordLocationArray = tree.Search(exp4Query, true)
 
+	// SearchRange(fromKey uint32, toKey uint32, verbose bool) []*storage.RecordLocation
 	// // bruteforce search
 	// var search2 = [2]uint32{30000, 40000}
 	// start2 := time.Now()
@@ -122,20 +136,28 @@ func Experiments(blockSize uint8) {
 		• the running time of the process;
 		• the number of data blocks that would be accessed by a brute-force linear scan method (i.e., it scans the data blocks one by one) and its running time (for comparison)
 	*/
-	// TODO insert tree search and delete here
+	// TODO insert tree search and delete here (Done)
+	exp5Query := index.SearchConfig{
+		Type:   index.ValueQuery,
+		Values: []uint32{1000},
+	}
+	recordLocationArray = tree.Search(exp5Query, true)
+	for recordLocation := 0; recordLocation < len(recordLocationArray); recordLocation++ {
+		disk.DeleteRecord(*recordLocationArray[recordLocation])
 
-	// // bruteforce search
-	// var search3 = [2]uint32{1000, 1000}
-	// start3 := time.Now()
-	// var _, bruteBlocksAccessed3 = disk.BruteForceSearch(search3)
-	// t3 := time.Now()
-	// elapsedBruteForce3 := t3.Sub(start3)
+		// // bruteforce search
+		// var search3 = [2]uint32{1000, 1000}
+		// start3 := time.Now()
+		// var _, bruteBlocksAccessed3 = disk.BruteForceSearch(search3)
+		// t3 := time.Now()
+		// elapsedBruteForce3 := t3.Sub(start3)
 
-	// fmt.Println("\n=== Experiment 5 ===\n")
-	// fmt.Printf("Number for index nodes the process access: %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Number for data blocks the process access: %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Average of 'averageRatings' of records returned: %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Running time of retrieval initialised (difference in monotonic clock before and after the function call): %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Number of data blocks accessed by brute-force linear scan: %d\n", bruteBlocksAccessed3)
-	// fmt.Printf("Running time of brute-force linear scan: %v\n", elapsedBruteForce3)
+		// fmt.Println("\n=== Experiment 5 ===\n")
+		// fmt.Printf("Number for index nodes the process access: %d\n", index.MAX_NUM_KEYS)
+		// fmt.Printf("Number for data blocks the process access: %d\n", index.MAX_NUM_KEYS)
+		// fmt.Printf("Average of 'averageRatings' of records returned: %d\n", index.MAX_NUM_KEYS)
+		// fmt.Printf("Running time of retrieval initialised (difference in monotonic clock before and after the function call): %d\n", index.MAX_NUM_KEYS)
+		// fmt.Printf("Number of data blocks accessed by brute-force linear scan: %d\n", bruteBlocksAccessed3)
+		// fmt.Printf("Running time of brute-force linear scan: %v\n", elapsedBruteForce3)
+	}
 }

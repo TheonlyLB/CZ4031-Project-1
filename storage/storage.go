@@ -211,21 +211,6 @@ func BytesToRecord(byteRecord []byte) Record {
 	return recordObject
 }
 
-// Takes record address, returns record object
-func AddressToRecord(diskObject *Disk, recordAddress *byte) Record {
-	location, exist := diskObject.LookUpTable[recordAddress]
-	if !exist {
-		errMsg := fmt.Sprintf("No record at address %v", recordAddress)
-		panic(errMsg)
-	}
-
-	blockOffset := location.RecordIndex * RecordLength
-	// Retrieve corresponding byte record
-	byteRecord := diskObject.BlockArray[location.BlockIndex].RecordValueArray[blockOffset : blockOffset+RecordLength]
-
-	return BytesToRecord(byteRecord)
-}
-
 // Takes block object, returns array of stored records and array of pointers to stored records
 func BlockToRecord(blockObject Block) ([]Record, []*byte) {
 	var recordArray []Record
@@ -241,6 +226,21 @@ func BlockToRecord(blockObject Block) ([]Record, []*byte) {
 	return recordArray, pointerArray
 }
 
+// Takes record address, returns record object
+func AddressToRecord(diskObject *Disk, recordAddress *byte) Record {
+	location, exist := diskObject.LookUpTable[recordAddress]
+	if !exist {
+		errMsg := fmt.Sprintf("No record at address %v", recordAddress)
+		panic(errMsg)
+	}
+
+	blockOffset := location.RecordIndex * RecordLength
+	// Retrieve corresponding byte record
+	byteRecord := diskObject.BlockArray[location.BlockIndex].RecordValueArray[blockOffset : blockOffset+RecordLength]
+
+	return BytesToRecord(byteRecord)
+}
+
 // Takes in a recordLocation instance and returns the record corresponding to that recordLocation
 func (diskObject *Disk) RetrieveRecord(recordLocationObject RecordLocation) Record {
 	var interestedBlock Block
@@ -253,9 +253,7 @@ func (diskObject *Disk) RetrieveRecord(recordLocationObject RecordLocation) Reco
 	return recordObject
 }
 
-// REVIEW after AddrToRecord,recordToBytes are implemented
-// Deletes record given address to record
-// change the input from address to recordlocation
+// Deletes record given recordLocation
 func (diskObject *Disk) DeleteRecord(recordLocationObject RecordLocation) {
 
 	var recordObject Record
