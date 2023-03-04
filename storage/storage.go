@@ -114,7 +114,8 @@ func (diskObject *Disk) LoadData(filepath string) {
 	for _, tuple := range tuples[1:] {
 		// Parse fields of data tuple to access relevant values
 		tConst := tuple[0]
-		averageRating, err := strconv.ParseFloat(tuple[1], 32)
+		// fmt.Println(tuple[1])
+		averageRating, err := strconv.ParseFloat(tuple[1], 2)
 		if err != nil {
 			panic("Failed to parse fields of data tuple")
 		}
@@ -140,6 +141,7 @@ func (diskObject *Disk) CreateRecord(tConst string, averageRating float64, numVo
 		AverageRating: uint8(averageRating * 10), // averageRating * 10 so it can be stored as uint8, 1 byte
 
 	}
+	// fmt.Println(averageRating)
 	// fmt.Println(recordObject.AverageRating)
 	// calculate blockCapacity using blockSize and recordLength
 	blockCapacity := diskObject.BlockSize / (RecordLength + 2) // 2 bytes for the block header
@@ -157,7 +159,7 @@ func (diskObject *Disk) CreateRecord(tConst string, averageRating float64, numVo
 	}
 	// convert record to bytes for storage(pack fields)
 	byteRecord := RecordToBytes(recordObject)
-
+	// fmt.Println(byteRecord)
 	// copy record into block
 	copy(currentBlock.RecordValueArray[currentBlock.NumRecord*RecordLength:], byteRecord)
 	// retrieve address of record on disk
@@ -208,20 +210,20 @@ func BytesToRecord(byteRecord []byte) Record {
 	averageRatingArray := (byteRecord[tConstLength : tConstLength+averageRatingLength])
 
 	// To convert byte array to uint8, first convert to string, then to integer
-	averageRating := int(averageRatingArray[0])
+	averageRating := uint8(averageRatingArray[0])
 
 	// Unpack numVotes
 	numVotes := binary.BigEndian.Uint32(byteRecord[tConstLength+averageRatingLength : tConstLength+averageRatingLength+numVotesLength])
 
 	// Unpack deleted
 	deletedArray := (byteRecord[tConstLength+averageRatingLength+numVotesLength : tConstLength+averageRatingLength+numVotesLength+deletedLength])
-	deleted := int(deletedArray[0])
+	deleted := uint8(deletedArray[0])
 
 	recordObject := Record{
 		TConst:        tConst,
-		AverageRating: uint8(averageRating),
+		AverageRating: averageRating,
 		NumVotes:      numVotes,
-		Deleted:       uint8(deleted),
+		Deleted:       deleted,
 	}
 	// fmt.Println("bytetorec")
 	// fmt.Println(recordObject.AverageRating)
