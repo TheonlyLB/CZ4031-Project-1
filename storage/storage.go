@@ -49,7 +49,7 @@ type Block struct {
 type Record struct {
 	TConst        []byte
 	NumVotes      uint32 //4 bytes
-	Deleted       bool   // true if deleted, 1 byte
+	Deleted       uint8  // 1 if deleted, 0 if not deleted 1 byte
 	AverageRating uint8  //1 byte
 
 }
@@ -140,6 +140,7 @@ func (diskObject *Disk) CreateRecord(tConst string, averageRating float64, numVo
 		AverageRating: uint8(averageRating * 10), // averageRating * 10 so it can be stored as uint8, 1 byte
 
 	}
+	// fmt.Println(recordObject.AverageRating)
 	// calculate blockCapacity using blockSize and recordLength
 	blockCapacity := diskObject.BlockSize / (RecordLength + 2) // 2 bytes for the block header
 	// retrieve current block
@@ -164,6 +165,7 @@ func (diskObject *Disk) CreateRecord(tConst string, averageRating float64, numVo
 	// update lookup table from address to recordLocation object
 	recordLocationObject := RecordLocation{BlockIndex: diskObject.BlockIndex - 1, RecordIndex: currentBlock.NumRecord}
 	diskObject.LookUpTable[recordAddress] = recordLocationObject
+
 	// store recordLocation in recordLocationArray
 	diskObject.RecordLocationArray = append(diskObject.RecordLocationArray, recordLocationObject)
 	// update numrecord to reflect new record added
@@ -174,19 +176,26 @@ func (diskObject *Disk) CreateRecord(tConst string, averageRating float64, numVo
 
 // Converts record object into bytes (packs fields)
 func RecordToBytes(recordObject Record) []byte {
+	// fmt.Println("in rectobyte")
 	var byteRecord []byte
 	// Pack tConst field
 	tConstBinary := make([]byte, tConstLength)
 	copy(tConstBinary, recordObject.TConst)
+	// fmt.Println(tConstBinary)
 	byteRecord = append(byteRecord, tConstBinary...)
 
 	// Pack averageRating
+	// fmt.Println("rectobyte")
+	// fmt.Println(recordObject.AverageRating)
 	byteRecord = append(byteRecord, recordObject.AverageRating)
 
 	// Pack numVotes
 	numVotesBinary := make([]byte, numVotesLength)
 	binary.BigEndian.PutUint32(numVotesBinary, recordObject.NumVotes)
 	byteRecord = append(byteRecord, numVotesBinary...)
+
+	// Pack deleted
+	byteRecord = append(byteRecord, recordObject.Deleted)
 
 	return byteRecord
 }
@@ -197,17 +206,26 @@ func BytesToRecord(byteRecord []byte) Record {
 	tConst := byteRecord[:tConstLength]
 	// Unpack averageRating
 	averageRatingArray := (byteRecord[tConstLength : tConstLength+averageRatingLength])
+
 	// To convert byte array to uint8, first convert to string, then to integer
-	averageRating, _ := strconv.Atoi(string(averageRatingArray))
+	averageRating := int(averageRatingArray[0])
 
 	// Unpack numVotes
-	numVotes := binary.BigEndian.Uint32(byteRecord[tConstLength+averageRatingLength:])
+	numVotes := binary.BigEndian.Uint32(byteRecord[tConstLength+averageRatingLength : tConstLength+averageRatingLength+numVotesLength])
+
+	// Unpack deleted
+	deletedArray := (byteRecord[tConstLength+averageRatingLength+numVotesLength : tConstLength+averageRatingLength+numVotesLength+deletedLength])
+	deleted := int(deletedArray[0])
 
 	recordObject := Record{
 		TConst:        tConst,
 		AverageRating: uint8(averageRating),
 		NumVotes:      numVotes,
+		Deleted:       uint8(deleted),
 	}
+	// fmt.Println("bytetorec")
+	// fmt.Println(recordObject.AverageRating)
+	// fmt.Println(averageRatingArray)
 	return recordObject
 }
 
@@ -271,7 +289,7 @@ func (diskObject *Disk) DeleteRecord(recordLocationObject RecordLocation) {
 	recordObject = recordArray[recordLocationObject.RecordIndex]
 
 	// set deleted flag to true
-	recordObject.Deleted = true
+	recordObject.Deleted = 1
 
 	// convert new recordObject
 	byteRecord = RecordToBytes(recordObject)
