@@ -36,22 +36,32 @@ func Experiments(blockSize uint8) {
 	tree := index.NewTree(int(treeOrder))
 
 	fmt.Println("Constructing B+ Tree...")
-	totalBlocks := len(disk.BlockArray)
+	// totalBlocks := len(disk.BlockArray)
 	// Inserting records
-	for blk_no, block := range disk.BlockArray {
-		// // To be deleted
-		if blk_no == 40000 {
-			break
-		}
-		recordArray, _ := storage.BlockToRecord(block)
 
-		for record_no, record := range recordArray {
-			if blk_no%1000 == 0 {
-				fmt.Printf("Block no: %v/%v, record no: %v \n", blk_no, totalBlocks, record_no)
-			}
-			tree.Insert(record.NumVotes, &disk.RecordLocationArray[record_no])
+	allRecords := disk.RetrieveAll()
+	for i, record := range allRecords {
+		numVotes := record.NumVotes
+		recordLoc := record.RdLoc
+		if i%1000 == 0 {
+			fmt.Printf("Record no: %v/%v\n", i, len(allRecords))
 		}
+		tree.Insert(numVotes, &recordLoc)
 	}
+	// for blk_no, block := range disk.BlockArray {
+	// 	// // To be deleted
+	// 	// if blk_no == 40000 {
+	// 	// 	break
+	// 	// }
+	// 	recordArray, _ := storage.BlockToRecord(block)
+
+	// 	for record_no, record := range recordArray {
+	// 		if blk_no%1000 == 0 {
+	// 			fmt.Printf("Block no: %v/%v, record no: %v \n", blk_no, totalBlocks, record_no)
+	// 		}
+	// 		tree.Insert(record.NumVotes, &disk.RecordLocationArray[record_no])
+	// 	}
+	// }
 	fmt.Println("B+ Tree Constructed")
 
 	// fmt.Println("=== Experiment 2 ===")
@@ -79,8 +89,6 @@ func Experiments(blockSize uint8) {
 	var avgOfAvgRating float32
 	for _, recordLoc := range recordLocationArray {
 		res := disk.RetrieveRecord(*recordLoc)
-		fmt.Printf("RecordLocation: %v, avgRating: %v \n", *recordLoc, res.AverageRating)
-
 		avgOfAvgRating += float32(res.AverageRating)
 	}
 	avgOfAvgRating /= float32(len(recordLocationArray))
@@ -90,18 +98,18 @@ func Experiments(blockSize uint8) {
 	fmt.Printf("Exp 3 Time taken: %v", exp3TimeTaken)
 
 	// bruteforce search
-	// var search = [2]uint32{500, 500}
-	// start := time.Now()
-	// var _, bruteBlocksAccessed = disk.BruteForceSearch(search)
-	// t := time.Now()
-	// elapsedBruteForce := t.Sub(start)
-	// fmt.Printf("\n=== Experiment 3 ===\n")
-	// fmt.Printf("Number for index nodes the process access: %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Number for data blocks the process access: %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Average of 'averageRatings' of records returned: %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Running time of retrieval initialised (difference in monotonic clock before and after the function call): %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Number of data blocks accessed by brute-force linear scan: %d\n", bruteBlocksAccessed)
-	// fmt.Printf("Running time of brute-force linear scan: %v\n", elapsedBruteForce)
+	var search = [2]uint32{500, 500}
+	start := time.Now()
+	var _, bruteBlocksAccessed = disk.BruteForceSearch(search)
+	t := time.Now()
+	elapsedBruteForce := t.Sub(start)
+	fmt.Printf("\n=== Experiment 3 ===\n")
+	fmt.Printf("Number for index nodes the process access: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Number for data blocks the process access: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Average of 'averageRatings' of records returned: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Running time of retrieval initialised (difference in monotonic clock before and after the function call): %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Number of data blocks accessed by brute-force linear scan: %d\n", bruteBlocksAccessed)
+	fmt.Printf("Running time of brute-force linear scan: %v\n", elapsedBruteForce)
 
 	/*
 		Experiment 4: retrieve those movies with the attribute “numVotes” from 30,000 to 40,000, both inclusively and report the following statistics:
@@ -111,44 +119,44 @@ func Experiments(blockSize uint8) {
 		• the running time of the retrieval process;
 		• the number of data blocks that would be accessed by a brute-force linear scan method (i.e., it scans the data blocks one by one) and its running time (for comparison)
 	*/
-	// type SearchConfig struct {
-	// 	Type   string // RangeQuery or Value query
-	// 	Values []uint32
-	// }
-	// valueArray := []uint32{30000, 40000}
-	// exp4Query := index.SearchConfig{
-	// 	Type:   index.RangeQuery,
-	// 	Values: valueArray,
-	// }
-	// exp4StartTime := time.Now()
-	// recordLocationArray := tree.Search(exp4Query, true)
-	// fmt.Printf("No. of RecordLocations: %v\n", len(recordLocationArray))
-	// var avgOfAvgRatingExp4 float32
-	// for _, recordLoc := range recordLocationArray {
-	// 	// fmt.Printf("RecordLocation: %v", *recordLoc)
-	// 	res := disk.RetrieveRecord(*recordLoc)
-	// 	avgOfAvgRatingExp4 += float32(res.AverageRating)
-	// }
-	// avgOfAvgRatingExp4 /= float32(len(recordLocationArray))
-	// exp4EndTime := time.Now()
-	// fmt.Printf("Avg of AvgRating: %v \n", avgOfAvgRatingExp4)
-	// exp4TimeTaken := exp4EndTime.Sub(exp4StartTime)
-	// fmt.Printf("Exp 4 Time taken: %v", exp4TimeTaken)
+	type SearchConfig struct {
+		Type   string // RangeQuery or Value query
+		Values []uint32
+	}
+	valueArray := []uint32{30000, 40000}
+	exp4Query := index.SearchConfig{
+		Type:   index.RangeQuery,
+		Values: valueArray,
+	}
+	exp4StartTime := time.Now()
+	recordLocationArray = tree.Search(exp4Query, true)
+	fmt.Printf("No. of RecordLocations: %v\n", len(recordLocationArray))
+	var avgOfAvgRatingExp4 float32
+	for _, recordLoc := range recordLocationArray {
+		// fmt.Printf("RecordLocation: %v", *recordLoc)
+		res := disk.RetrieveRecord(*recordLoc)
+		avgOfAvgRatingExp4 += float32(res.AverageRating)
+	}
+	avgOfAvgRatingExp4 /= float32(len(recordLocationArray))
+	exp4EndTime := time.Now()
+	fmt.Printf("Avg of AvgRating: %v \n", avgOfAvgRatingExp4)
+	exp4TimeTaken := exp4EndTime.Sub(exp4StartTime)
+	fmt.Printf("Exp 4 Time taken: %v", exp4TimeTaken)
 
 	// // bruteforce search
-	// var search2 = [2]uint32{30000, 40000}
-	// start2 := time.Now()
-	// var _, bruteBlocksAccessed2 = disk.BruteForceSearch(search2)
-	// t2 := time.Now()
-	// elapsedBruteForce2 := t2.Sub(start2)
+	var search2 = [2]uint32{30000, 40000}
+	start2 := time.Now()
+	var _, bruteBlocksAccessed2 = disk.BruteForceSearch(search2)
+	t2 := time.Now()
+	elapsedBruteForce2 := t2.Sub(start2)
 
-	// fmt.Println("\n=== Experiment 4 ===\n")
-	// fmt.Printf("Number for index nodes the process access: %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Number for data blocks the process access: %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Average of 'averageRatings' of records returned: %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Running time of retrieval initialised (difference in monotonic clock before and after the function call): %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Number of data blocks accessed by brute-force linear scan: %d\n", bruteBlocksAccessed2)
-	// fmt.Printf("Running time of brute-force linear scan: %v\n", elapsedBruteForce2)
+	fmt.Println("\n=== Experiment 4 ===\n")
+	fmt.Printf("Number for index nodes the process access: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Number for data blocks the process access: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Average of 'averageRatings' of records returned: %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Running time of retrieval initialised (difference in monotonic clock before and after the function call): %d\n", index.MAX_NUM_KEYS)
+	fmt.Printf("Number of data blocks accessed by brute-force linear scan: %d\n", bruteBlocksAccessed2)
+	fmt.Printf("Running time of brute-force linear scan: %v\n", elapsedBruteForce2)
 
 	/*
 		Experiment 5: delete those movies with the attribute “numVotes” equal to 1,000, update the B+ tree accordingly, and report the following statistics:
