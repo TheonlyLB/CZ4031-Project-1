@@ -74,6 +74,18 @@ func Experiments(blockSize uint8) {
 	}
 	recordLocationArray := tree.Search(exp3Query, true)
 	fmt.Printf("No. of RecordLocations: %v\n", len(recordLocationArray))
+	// testing
+	// fmt.Println(disk.RetrieveRecord(*recordLocationArray[0]).AverageRating)
+	// recloc := disk.RetrieveAll()
+	// for i := 0; i < len(recloc); i++ {
+	// 	rec := disk.RetrieveRecord(recloc[i].RdLoc)
+	// 	fmt.Println("in test")
+	// 	fmt.Println(recloc[i].NumVotes == rec.NumVotes)
+	// 	fmt.Println(rec.AverageRating)
+	// 	fmt.Println(rec.Deleted)
+	// 	fmt.Println(rec.NumVotes)
+	// 	fmt.Println(rec.TConst)
+	// }
 
 	// bruteforce search
 	// var search = [2]uint32{500, 500}
