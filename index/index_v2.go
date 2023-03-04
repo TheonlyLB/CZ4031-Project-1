@@ -31,20 +31,6 @@ func (tree *BPTree) Insert(key uint32, addr *storage.RecordLocation) {
 
 }
 
-// func (tree *BPTree) Search(key uint32, verbose bool) []*byte {
-// 	node, count := tree.locateLeaf(key, verbose)
-
-// 	if verbose {
-// 		fmt.Printf("Total index node accessed: %v\n", count)
-// 	}
-// 	for i, item := range node.Key {
-// 		if item == key {
-// 			return node.DataPtr[i].extractDuplicateKeyRecords()
-// 		}
-// 	}
-// 	return nil
-// }
-
 func (tree *BPTree) Delete(key uint32) {
 	node, _ := tree.locateLeaf(key, false)
 	tree.deleteKey(node, key)
@@ -137,22 +123,8 @@ func (tree *BPTree) GetTotalNodes() int {
 	return count
 }
 
-// Extract all records with the same key
-// func (record *RecordLLNode) extractDuplicateKeyRecords() []*byte {
-// 	r := record
-// 	res := []*byte{r.Addr}
-
-// 	// Traverse the linked list
-// 	for r.Next != nil {
-// 		r = r.Next
-// 		res = append(res, r.Addr)
-// 	}
-
-// 	return res
-// }
-
 // Insert a record to the end of the record linked list
-func (record *RecordLLNode) insert(addr *storage.RecordLocation) {
+func (record *RecordLLNode) insert(location *storage.RecordLocation) {
 	r := record
 	for r.Next != nil {
 		r = r.Next
@@ -160,7 +132,7 @@ func (record *RecordLLNode) insert(addr *storage.RecordLocation) {
 	}
 
 	r.Next = &RecordLLNode{
-		RecordInfo: addr,
+		RecordInfo: location,
 		Next:       nil,
 	}
 }
@@ -265,14 +237,8 @@ func (tree *BPTree) newLeafNode() *BPNode {
 	}
 }
 
-//
-//
-// Insert related codes
-//
-//
-
-// helper function to insert node/addr/key into their slice at target index
-func insertAt[T *BPNode | *RecordLLNode | uint32](arr []T, value T, target int) {
+// function to insert into slice at target index
+func insertAtIndex[T *BPNode | *RecordLLNode | uint32](arr []T, value T, target int) {
 
 	// Shift 1 position down the array
 	for i := len(arr) - 1; i >= 0; i-- {
@@ -284,7 +250,7 @@ func insertAt[T *BPNode | *RecordLLNode | uint32](arr []T, value T, target int) 
 	arr[target] = value
 }
 
-// helper function to get the insertion index
+// helper function to get the index to insert
 func getInsertIndex(keyList []uint32, key uint32) int {
 	for i, item := range keyList {
 		if item == 0 {
@@ -302,8 +268,8 @@ func getInsertIndex(keyList []uint32, key uint32) int {
 // Insert into leaf, given a space in leaf
 func (node *BPNode) insertIntoLeaf(key uint32, addr *storage.RecordLocation) {
 	targetIndex := getInsertIndex(node.Key, key)
-	insertAt(node.DataPtr, &RecordLLNode{RecordInfo: addr}, targetIndex) // insert ptr
-	insertAt(node.Key, key, targetIndex)                                 // insert key
+	insertAtIndex(node.DataPtr, &RecordLLNode{RecordInfo: addr}, targetIndex) // insert ptr
+	insertAtIndex(node.Key, key, targetIndex)                                 // insert key
 }
 
 // Split the node and insert
@@ -315,8 +281,8 @@ func (tree *BPTree) splitAndInsertIntoLeaf(node *BPNode, key uint32, addr *stora
 	copy(tempPointers, node.DataPtr)
 
 	targetIndex := getInsertIndex(tempKeys, key)
-	insertAt(tempKeys, key, targetIndex)
-	insertAt(tempPointers, &RecordLLNode{RecordInfo: addr}, targetIndex)
+	insertAtIndex(tempKeys, key, targetIndex)
+	insertAtIndex(tempPointers, &RecordLLNode{RecordInfo: addr}, targetIndex)
 
 	splitIndex := getSplitIndex(tree.Order)
 
@@ -331,7 +297,7 @@ func (tree *BPTree) splitAndInsertIntoLeaf(node *BPNode, key uint32, addr *stora
 	newNode.DataPtr = make([]*RecordLLNode, tree.Order-1)
 	copy(newNode.Key, tempKeys[splitIndex:])
 	copy(newNode.DataPtr, tempPointers[splitIndex:])
-	newNode.Parent = node.Parent // new node shares the same parent as the left node
+	newNode.Parent = node.Parent
 	newNode.IsLeaf = true
 	newNode.Next = node.Next
 	node.Next = newNode
@@ -346,8 +312,8 @@ func (node *BPNode) insertIntoNode(key uint32, rightNode *BPNode) {
 	if key == 19 {
 		fmt.Printf("%v\n", targetIndex)
 	}
-	insertAt(node.Children, rightNode, targetIndex+1) // insert ptr
-	insertAt(node.Key, key, targetIndex)              // insert key
+	insertAtIndex(node.Children, rightNode, targetIndex+1) // insert ptr
+	insertAtIndex(node.Key, key, targetIndex)              // insert key
 }
 
 func (tree *BPTree) splitAndInsertIntoNode(node *BPNode, insertedNode *BPNode, key uint32) {
@@ -358,8 +324,8 @@ func (tree *BPTree) splitAndInsertIntoNode(node *BPNode, insertedNode *BPNode, k
 	copy(tempPointers, node.Children)
 
 	insertIndex := getInsertIndex(tempKeys, key)
-	insertAt(tempKeys, key, insertIndex)
-	insertAt(tempPointers, insertedNode, insertIndex+1)
+	insertAtIndex(tempKeys, key, insertIndex)
+	insertAtIndex(tempPointers, insertedNode, insertIndex+1)
 
 	splitIndex := getSplitIndex(tree.Order)
 
@@ -396,12 +362,12 @@ func (tree *BPTree) insertIntoParent(leftNode *BPNode, rightNode *BPNode, key ui
 	parent := leftNode.Parent
 
 	if parent == nil {
-		// No parent, create new
+		// Create a new parent if no parent
 		parent = tree.newNode()
 		tree.Root = parent
-		insertAt(parent.Key, key, insertIndex)
-		insertAt(parent.Children, leftNode, 0)
-		insertAt(parent.Children, rightNode, 1)
+		insertAtIndex(parent.Key, key, insertIndex)
+		insertAtIndex(parent.Children, leftNode, 0)
+		insertAtIndex(parent.Children, rightNode, 1)
 
 		// Update parent
 		for _, item := range parent.Children {
@@ -416,12 +382,6 @@ func (tree *BPTree) insertIntoParent(leftNode *BPNode, rightNode *BPNode, key ui
 	}
 
 }
-
-//
-//
-// Delete related codes
-//
-//
 
 // helper function to remove node/addr/key into their slice at target index
 func removeAt[T *BPNode | *RecordLLNode | uint32](arr []T, target int) {
@@ -623,13 +583,13 @@ func (node *BPNode) borrowFromNode(borrowFrom *BPNode, isPrev bool) {
 		parentReplaceKey = borrowFrom.Key[1]
 	}
 
-	insertAt(node.Key, borrowFrom.Key[removeIndex], insertIndex)
+	insertAtIndex(node.Key, borrowFrom.Key[removeIndex], insertIndex)
 	removeAt(borrowFrom.Key, removeIndex)
 	borrowFrom.Key[len(borrowFrom.Key)-1] = 0 // set last index as nil
 
 	if node.IsLeaf {
 
-		insertAt(node.DataPtr, borrowFrom.DataPtr[removeIndex], insertIndex)
+		insertAtIndex(node.DataPtr, borrowFrom.DataPtr[removeIndex], insertIndex)
 		removeAt(borrowFrom.DataPtr, removeIndex)
 		borrowFrom.DataPtr[len(borrowFrom.DataPtr)-1] = nil // set last index as nil
 
@@ -642,9 +602,9 @@ func (node *BPNode) borrowFromNode(borrowFrom *BPNode, isPrev bool) {
 		}
 	} else {
 		if isPrev {
-			insertAt(node.Children, borrowFrom.Children[removeIndex+1], insertIndex)
+			insertAtIndex(node.Children, borrowFrom.Children[removeIndex+1], insertIndex)
 		} else {
-			insertAt(node.Children, borrowFrom.Children[removeIndex+1], insertIndex+1)
+			insertAtIndex(node.Children, borrowFrom.Children[removeIndex+1], insertIndex+1)
 		}
 
 		removeAt(borrowFrom.Children, removeIndex+1)
@@ -683,57 +643,55 @@ func (tree *BPTree) Search(config SearchConfig, verbose bool) []*storage.RecordL
 		}
 		return nil
 	} else if config.Type == RangeQuery {
+		var records []*storage.RecordLocation
+		lower, upper := config.Values[0], config.Values[1]
+
+		node, count := tree.locateLeaf(lower, verbose)
+
+		// Process first node
+		for i, item := range node.Key {
+			if item == 0 {
+				break
+			}
+			if item >= lower {
+				records = append(records, node.DataPtr[i].getRecordsFromLinkedList()...)
+			}
+		}
+		node = node.Next
+
+		for node != nil {
+			count += 1
+
+			if verbose {
+				if count <= 5 {
+					fmt.Printf("Node content: %v\n", node.Key)
+				}
+			}
+
+			for i, item := range node.Key {
+				if item == 0 || item > upper {
+					break
+				}
+				records = append(records, node.DataPtr[i].getRecordsFromLinkedList()...)
+			}
+
+			if node.Key[node.getKeySize()-1] >= upper {
+				// Range reached
+				break
+			}
+			node = node.Next
+
+		}
+		if verbose {
+			fmt.Printf("Total index node accessed: %v\n", count)
+		}
+		return records
 
 	} else {
 		fmt.Printf("Incorrect query type")
 	}
 	return nil
 }
-
-//func (tree *BPTree) SearchRange(fromKey uint32, toKey uint32, verbose bool) []*storage.RecordLocation {
-//	var records []*storage.RecordLocation
-//	node, count := tree.locateLeaf(fromKey, verbose)
-//
-//	// Process first node
-//	for i, item := range node.Key {
-//		if item == 0 {
-//			break
-//		}
-//		if item >= fromKey {
-//			records = append(records, node.DataPtr[i].extractDuplicateKeyRecords()...)
-//		}
-//	}
-//	node = node.Next
-//
-//	for node != nil {
-//		count += 1
-//
-//		if verbose {
-//			if count <= 5 {
-//				fmt.Printf("Node content: %v\n", node.Key)
-//			}
-//		}
-//
-//		for i, item := range node.Key {
-//			if item == 0 || item > toKey {
-//				break
-//			}
-//			records = append(records, node.DataPtr[i].extractDuplicateKeyRecords()...)
-//		}
-//
-//		if node.Key[node.getKeySize()-1] >= toKey {
-//			// Range reached
-//			break
-//		}
-//		node = node.Next
-//
-//	}
-//	if verbose {
-//		fmt.Printf("Total index node accessed: %v\n", count)
-//	}
-//	return records
-//
-//}
 
 func (recordNode *RecordLLNode) getRecordsFromLinkedList() []*storage.RecordLocation {
 	res := []*storage.RecordLocation{recordNode.RecordInfo}
