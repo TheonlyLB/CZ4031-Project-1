@@ -41,7 +41,7 @@ func Experiments(blockSize uint8) {
 	for i, record := range allRecords {
 		numVotes := record.NumVotes
 		recordLoc := record.RdLoc
-		if i%1000 == 0 {
+		if i%10000 == 0 {
 			fmt.Printf("Record no: %v/%v\n", i, len(allRecords))
 		}
 		tree.Insert(numVotes, &recordLoc)
