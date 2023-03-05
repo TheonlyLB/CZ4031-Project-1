@@ -306,7 +306,7 @@ func (diskObject *Disk) DeleteRecord(recordLocationObject RecordLocation) {
 			diskObject.RecordLocationArray = append(diskObject.RecordLocationArray[:i], diskObject.RecordLocationArray[i+1:]...)
 		}
 	}
-	fmt.Println("Record Deleted")
+	// fmt.Println("Record Deleted")
 	return
 }
 

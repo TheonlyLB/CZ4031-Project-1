@@ -146,7 +146,7 @@ func (tree *BPTree) locateLeaf(key uint32, verbose bool) (*BPNode, int) {
 	}
 
 	if verbose {
-		fmt.Println("Node keys while traversing the tree (up to first 5):")
+		// fmt.Println("Node keys while traversing the tree (up to first 5):")
 	}
 
 	// Recursive search until leaf
@@ -155,7 +155,7 @@ func (tree *BPTree) locateLeaf(key uint32, verbose bool) (*BPNode, int) {
 		count++
 		if verbose {
 			if count <= 5 {
-				fmt.Printf("Node keys: %v\n", cursor.Key)
+				// fmt.Printf("Node keys: %v\n", cursor.Key)
 			}
 		}
 
@@ -178,7 +178,7 @@ func (tree *BPTree) locateLeaf(key uint32, verbose bool) (*BPNode, int) {
 
 	if verbose {
 		if count <= 5 {
-			fmt.Printf("Node keys: %v\n", cursor.Key)
+			// fmt.Printf("Node keys: %v\n", cursor.Key)
 		}
 	}
 

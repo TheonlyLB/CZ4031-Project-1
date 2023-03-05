@@ -19,7 +19,7 @@ func Experiments(blockSize uint8) {
 	disk := storage.CreateDisk(100, blockSize)
 	disk.LoadData("./data.tsv")
 
-	fmt.Printf("---------- Experiment 1 ----------")
+	fmt.Println("\n---------- Experiment 1 ----------")
 	fmt.Printf("Number of records on disk: %d\n", disk.NumRecords)
 	fmt.Printf("Size of record: %d\n", storage.RecordLength)
 	fmt.Printf("Number of records in block: %d\n", disk.BlockArray[0].NumRecord) //disk.BlockSize/storage.RecordLength
@@ -48,6 +48,14 @@ func Experiments(blockSize uint8) {
 	}
 	fmt.Println("B+ Tree Constructed")
 
+	// Printing here to preserve logs
+	fmt.Println("\n---------- Experiment 1 ----------")
+	fmt.Printf("Number of records on disk: %d\n", disk.NumRecords)
+	fmt.Printf("Size of record: %d\n", storage.RecordLength)
+	fmt.Printf("Number of records in block: %d\n", disk.BlockArray[0].NumRecord) //disk.BlockSize/storage.RecordLength
+	fmt.Printf("Number of blocks used: %d\n", len(disk.BlockArray))
+	// End of prints for exp1
+
 	fmt.Printf("\n---------- Experiment 2 ----------\n")
 	fmt.Printf("Order/Branching Factor n: %d\n", index.MAX_NUM_KEYS)
 	fmt.Printf("Number of nodes: %v\n", tree.GetTotalNodes())
@@ -62,7 +70,7 @@ func Experiments(blockSize uint8) {
 		• the running time of the retrieval process (please specify the method you use for measuring the running time of a piece of code)
 		• the number of data blocks that would be accessed by a brute-force linear scan method (i.e., it scans the data blocks one by one) and its running time (for comparison)
 	*/
-	fmt.Printf("\n=== Experiment 3 ===\n")
+	fmt.Println("\n---------- Experiment 3 ----------")
 	exp3Query := index.SearchConfig{
 		Type:   index.ValueQuery,
 		Values: []uint32{500},
@@ -149,9 +157,9 @@ func Experiments(blockSize uint8) {
 
 	exp5StartTime := time.Now()
 	recordLocationArray5 := tree.Search(exp5Query, true)
-	fmt.Printf("No. of RecordLocations: %v\n", len(recordLocationArray5))
+	// fmt.Printf("No. of RecordLocations: %v\n", len(recordLocationArray5))
 	for _, recordLoc := range recordLocationArray5 {
-		fmt.Printf("RecordLocation to be deleted: %v", *recordLoc)
+		// fmt.Printf("RecordLocation to be deleted: %v", *recordLoc)
 		disk.DeleteRecord(*recordLoc)
 	}
 	exp5EndTime := time.Now()
@@ -179,6 +187,6 @@ func CountBlockAccessed(recordLoc []*storage.RecordLocation) int {
 	for _, record := range recordLoc {
 		seen[record.BlockIndex] += 1
 	}
-	fmt.Printf("Blocks used count map: %v \n", seen)
+	// fmt.Printf("Blocks used count map: %v \n", seen)
 	return len(seen)
 }
