@@ -11,15 +11,6 @@ import (
 	"github.com/grailbio/base/tsv"
 )
 
-// 12/2/23
-// delieverables for indexing grp
-// func retrieveAll():
-//   return [[recordLocationObject1,numVotes1],[recordLocationObject2,numVotes2],........]
-// func retrieveRecord(recordLocationObject):
-// 	 return recordObject
-// func delete(recordLocationObject):
-// 	 return bool
-
 const (
 	tConstLength        = 10
 	averageRatingLength = 1
@@ -152,6 +143,25 @@ func (diskObject *Disk) CreateRecord(tConst string, averageRating float64, numVo
 		// create new block
 		index, err := CreateBlock(diskObject)
 		if err != nil {
+			// insufficient space
+			// check in deleted array
+			if len(diskObject.DeletedArray) > 0 {
+				// access first recloc
+				newRecLoc := diskObject.DeletedArray[0]
+				targetBlock := diskObject.BlockArray[newRecLoc.BlockIndex]
+				byteRecord := RecordToBytes(recordObject)
+				// replaces old data with new data
+				copy(targetBlock.RecordValueArray[newRecLoc.RecordIndex*RecordLength:], byteRecord)
+				// update recordlocationarray
+				diskObject.RecordLocationArray = append(diskObject.RecordLocationArray, newRecLoc)
+				// update deleted array
+				if len(diskObject.DeletedArray) > 1 {
+					diskObject.DeletedArray = diskObject.DeletedArray[1:] // pops first element
+				} else {
+					diskObject.DeletedArray = []RecordLocation{} // empty deleted array
+				}
+				return &targetBlock.RecordValueArray[newRecLoc.RecordIndex*RecordLength], nil
+			}
 			panic("Cannot create new block when current block is full")
 		}
 		// retrieve new block using its index, store as current block
@@ -159,7 +169,6 @@ func (diskObject *Disk) CreateRecord(tConst string, averageRating float64, numVo
 	}
 	// convert record to bytes for storage(pack fields)
 	byteRecord := RecordToBytes(recordObject)
-	// fmt.Println(byteRecord)
 	// copy record into block
 	copy(currentBlock.RecordValueArray[currentBlock.NumRecord*RecordLength:], byteRecord)
 	// retrieve address of record on disk
@@ -183,12 +192,9 @@ func RecordToBytes(recordObject Record) []byte {
 	// Pack tConst field
 	tConstBinary := make([]byte, tConstLength)
 	copy(tConstBinary, recordObject.TConst)
-	// fmt.Println(tConstBinary)
 	byteRecord = append(byteRecord, tConstBinary...)
 
 	// Pack averageRating
-	// fmt.Println("rectobyte")
-	// fmt.Println(recordObject.AverageRating)
 	byteRecord = append(byteRecord, recordObject.AverageRating)
 
 	// Pack numVotes
@@ -225,9 +231,6 @@ func BytesToRecord(byteRecord []byte) Record {
 		NumVotes:      numVotes,
 		Deleted:       deleted,
 	}
-	// fmt.Println("bytetorec")
-	// fmt.Println(recordObject.AverageRating)
-	// fmt.Println(averageRatingArray)
 	return recordObject
 }
 
@@ -236,8 +239,8 @@ func BlockToRecord(blockObject Block) ([]Record, []*byte) {
 	var recordArray []Record
 	var pointerArray []*byte
 	var recordObject Record
-	// numrecord is the number of records in block
 
+	// numrecord is the number of records in block
 	for i := 0; i < int(blockObject.NumRecord); i++ {
 		recordObject = BytesToRecord(blockObject.RecordValueArray[i*RecordLength : i*RecordLength+RecordLength])
 		recordArray = append(recordArray, recordObject)
@@ -269,7 +272,6 @@ func (diskObject *Disk) RetrieveRecord(recordLocationObject RecordLocation) Reco
 	interestedBlock = diskObject.BlockArray[recordLocationObject.BlockIndex]
 	recordArray, _ = BlockToRecord(interestedBlock)
 	recordObject = recordArray[recordLocationObject.RecordIndex]
-	// fmt.Println("Retrieved record")
 	return recordObject
 }
 
@@ -283,10 +285,6 @@ func (diskObject *Disk) DeleteRecord(recordLocationObject RecordLocation) {
 	interestedBlock := diskObject.BlockArray[recordLocationObject.BlockIndex]
 
 	// retrieve recordObject
-	// recordObject, err := addressToRecord(address)
-	// if err != nil {
-	// 	panic("Unable to delete record as recordObject could not be formed from address")
-	// }
 	recordArray, _ = BlockToRecord(interestedBlock)
 	recordObject = recordArray[recordLocationObject.RecordIndex]
 
@@ -324,7 +322,6 @@ func (diskObject *Disk) RetrieveAll() []RecordLocationNumVotes {
 }
 
 // Brute force solution for getting records given range of numVotes
-// hardcoded numvotes size
 func (diskObject *Disk) BruteForceSearch(rangeNumVotes [2]uint32) ([]Record, int) {
 	var resRecords []Record
 	var numBlocksAccessed int = 0

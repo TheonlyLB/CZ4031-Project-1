@@ -48,26 +48,12 @@ func Experiments(blockSize uint8) {
 		}
 		tree.Insert(numVotes, &recordLoc)
 	}
-	// for blk_no, block := range disk.BlockArray {
-	// 	// // To be deleted
-	// 	// if blk_no == 40000 {
-	// 	// 	break
-	// 	// }
-	// 	recordArray, _ := storage.BlockToRecord(block)
-
-	// 	for record_no, record := range recordArray {
-	// 		if blk_no%1000 == 0 {
-	// 			fmt.Printf("Block no: %v/%v, record no: %v \n", blk_no, totalBlocks, record_no)
-	// 		}
-	// 		tree.Insert(record.NumVotes, &disk.RecordLocationArray[record_no])
-	// 	}
-	// }
 	fmt.Println("B+ Tree Constructed")
 
-	// fmt.Println("=== Experiment 2 ===")
+	fmt.Println("\n=== Experiment 2 ===\n")
 	fmt.Printf("Order/Branching Factor n: %d\n", index.MAX_NUM_KEYS)
-	fmt.Printf("Tree height: %v\n", tree.GetHeight())
 	fmt.Printf("Number of nodes: %v\n", tree.GetTotalNodes())
+	fmt.Printf("Tree height: %v\n", tree.GetHeight())
 	fmt.Printf("Root Key: %v\n", tree.Root.Key)
 
 	/*
@@ -78,7 +64,7 @@ func Experiments(blockSize uint8) {
 		• the running time of the retrieval process (please specify the method you use for measuring the running time of a piece of code)
 		• the number of data blocks that would be accessed by a brute-force linear scan method (i.e., it scans the data blocks one by one) and its running time (for comparison)
 	*/
-
+	fmt.Println("\n=== Experiment 3 ===\n")
 	exp3Query := index.SearchConfig{
 		Type:   index.ValueQuery,
 		Values: []uint32{500},
@@ -95,7 +81,7 @@ func Experiments(blockSize uint8) {
 	exp3EndTime := time.Now()
 	fmt.Printf("Avg of AvgRating: %v \n", avgOfAvgRating)
 	exp3TimeTaken := exp3EndTime.Sub(exp3StartTime)
-	fmt.Printf("Exp 3 Time taken: %v", exp3TimeTaken)
+	fmt.Printf("Exp 3 Time taken: %v\n", exp3TimeTaken)
 
 	// bruteforce search
 	var search = [2]uint32{500, 500}
@@ -103,11 +89,6 @@ func Experiments(blockSize uint8) {
 	var _, bruteBlocksAccessed = disk.BruteForceSearch(search)
 	t := time.Now()
 	elapsedBruteForce := t.Sub(start)
-	fmt.Printf("\n=== Experiment 3 ===\n")
-	fmt.Printf("Number for index nodes the process access: %d\n", index.MAX_NUM_KEYS)
-	fmt.Printf("Number for data blocks the process access: %d\n", index.MAX_NUM_KEYS)
-	fmt.Printf("Average of 'averageRatings' of records returned: %d\n", index.MAX_NUM_KEYS)
-	fmt.Printf("Running time of retrieval initialised (difference in monotonic clock before and after the function call): %d\n", index.MAX_NUM_KEYS)
 	fmt.Printf("Number of data blocks accessed by brute-force linear scan: %d\n", bruteBlocksAccessed)
 	fmt.Printf("Running time of brute-force linear scan: %v\n", elapsedBruteForce)
 
@@ -119,6 +100,7 @@ func Experiments(blockSize uint8) {
 		• the running time of the retrieval process;
 		• the number of data blocks that would be accessed by a brute-force linear scan method (i.e., it scans the data blocks one by one) and its running time (for comparison)
 	*/
+	fmt.Println("\n=== Experiment 4 ===\n")
 	type SearchConfig struct {
 		Type   string // RangeQuery or Value query
 		Values []uint32
@@ -141,7 +123,7 @@ func Experiments(blockSize uint8) {
 	exp4EndTime := time.Now()
 	fmt.Printf("Avg of AvgRating: %v \n", avgOfAvgRatingExp4)
 	exp4TimeTaken := exp4EndTime.Sub(exp4StartTime)
-	fmt.Printf("Exp 4 Time taken: %v", exp4TimeTaken)
+	fmt.Printf("Exp 4 Time taken: %v\n", exp4TimeTaken)
 
 	// // bruteforce search
 	var search2 = [2]uint32{30000, 40000}
@@ -149,12 +131,6 @@ func Experiments(blockSize uint8) {
 	var _, bruteBlocksAccessed2 = disk.BruteForceSearch(search2)
 	t2 := time.Now()
 	elapsedBruteForce2 := t2.Sub(start2)
-
-	fmt.Println("\n=== Experiment 4 ===\n")
-	fmt.Printf("Number for index nodes the process access: %d\n", index.MAX_NUM_KEYS)
-	fmt.Printf("Number for data blocks the process access: %d\n", index.MAX_NUM_KEYS)
-	fmt.Printf("Average of 'averageRatings' of records returned: %d\n", index.MAX_NUM_KEYS)
-	fmt.Printf("Running time of retrieval initialised (difference in monotonic clock before and after the function call): %d\n", index.MAX_NUM_KEYS)
 	fmt.Printf("Number of data blocks accessed by brute-force linear scan: %d\n", bruteBlocksAccessed2)
 	fmt.Printf("Running time of brute-force linear scan: %v\n", elapsedBruteForce2)
 
