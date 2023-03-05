@@ -73,7 +73,7 @@ func (tree *BPTree) Search(config SearchConfig, verbose bool) []*storage.RecordL
 
 			if verbose {
 				if count <= 5 {
-					fmt.Printf("Node keys: %v\n", node.Key)
+					// fmt.Printf("Node keys: %v\n", node.Key)
 				}
 			}
 
