@@ -167,27 +167,34 @@ func Experiments(blockSize uint8) {
 		• the number of data blocks that would be accessed by a brute-force linear scan method (i.e., it scans the data blocks one by one) and its running time (for comparison)
 	*/
 	// TODO insert tree search and delete here (Done)
-	// exp5Query := index.SearchConfig{
-	// 	Type:   index.ValueQuery,
-	// 	Values: []uint32{1000},
-	// }
-	// recordLocationArray = tree.Search(exp5Query, true)
-	// for recordLocation := 0; recordLocation < len(recordLocationArray); recordLocation++ {
-	// 	disk.DeleteRecord(*recordLocationArray[recordLocation])
+	exp5Query := index.SearchConfig{
+		Type:   index.ValueQuery,
+		Values: []uint32{1000},
+	}
 
-	// // bruteforce search
-	// var search3 = [2]uint32{1000, 1000}
-	// start3 := time.Now()
-	// var _, bruteBlocksAccessed3 = disk.BruteForceSearch(search3)
-	// t3 := time.Now()
-	// elapsedBruteForce3 := t3.Sub(start3)
+	exp5StartTime := time.Now()
+	recordLocationArray5 := tree.Search(exp5Query, true)
+	fmt.Printf("No. of RecordLocations: %v\n", len(recordLocationArray5))
+	for _, recordLoc := range recordLocationArray5 {
+		fmt.Printf("RecordLocation to be deleted: %v", *recordLoc)
+		disk.DeleteRecord(*recordLoc)
+	}
+	exp5EndTime := time.Now()
+	height := tree.GetHeight()
+	totalNodes := tree.GetTotalNodes()
+	exp5TimeTaken := exp5EndTime.Sub(exp5StartTime)
 
-	// fmt.Println("\n=== Experiment 5 ===\n")
-	// fmt.Printf("Number for index nodes the process access: %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Number for data blocks the process access: %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Average of 'averageRatings' of records returned: %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Running time of retrieval initialised (difference in monotonic clock before and after the function call): %d\n", index.MAX_NUM_KEYS)
-	// fmt.Printf("Number of data blocks accessed by brute-force linear scan: %d\n", bruteBlocksAccessed3)
-	// fmt.Printf("Running time of brute-force linear scan: %v\n", elapsedBruteForce3)
-	// }
+	//brute force creation
+	var search5 = [2]uint32{1000, 1000}
+	start5 := time.Now()
+	var _, bruteBlocksAccessed5 = disk.BruteForceSearch(search5)
+	t5 := time.Now()
+	elapsedBruteForce5 := t5.Sub(start5)
+	fmt.Println("\n=== Experiment 5 ===")
+	fmt.Printf("\nTotal nodes of the tree: %d", totalNodes)
+	fmt.Printf("\nNo. of levels of the tree: %d", height)
+	fmt.Println("\nRoot node keys: ", tree.Root.Key)
+	fmt.Printf("\nExp 5 Time taken (B+ Tree): %v", exp5TimeTaken)
+	fmt.Printf("\nNumber for data blocks the process access (BruteFroce): %d\n", bruteBlocksAccessed5)
+	fmt.Printf("\nRunning time of brute-force linear scan: %v\n", elapsedBruteForce5)
 }
