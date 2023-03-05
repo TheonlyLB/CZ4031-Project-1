@@ -84,6 +84,7 @@ func Experiments(blockSize uint8) {
 	}
 	noOfBlocks := CountBlockAccessed(recordLocationArray)
 	avgOfAvgRating /= float32(len(recordLocationArray))
+	avgOfAvgRating /= 10
 	exp3EndTime := time.Now()
 	exp3TimeTaken := exp3EndTime.Sub(exp3StartTime)
 
@@ -127,6 +128,7 @@ func Experiments(blockSize uint8) {
 	}
 	noOfBlocksExp4 := CountBlockAccessed(recordLocationArray)
 	avgOfAvgRatingExp4 /= float32(len(recordLocationArray))
+	avgOfAvgRatingExp4 /= 10
 	exp4EndTime := time.Now()
 	exp4TimeTaken := exp4EndTime.Sub(exp4StartTime)
 
