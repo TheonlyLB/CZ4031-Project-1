@@ -150,6 +150,7 @@ func Experiments(blockSize uint8) {
 		• the running time of the process;
 		• the number of data blocks that would be accessed by a brute-force linear scan method (i.e., it scans the data blocks one by one) and its running time (for comparison)
 	*/
+	fmt.Println("\n---------- Experiment 5 ----------")
 	exp5Query := index.SearchConfig{
 		Type:   index.ValueQuery,
 		Values: []uint32{1000},
@@ -173,7 +174,6 @@ func Experiments(blockSize uint8) {
 	var _, bruteBlocksAccessed5 = disk.BruteForceSearch(search5)
 	t5 := time.Now()
 	elapsedBruteForce5 := t5.Sub(start5)
-	fmt.Println("\n---------- Experiment 5 ----------")
 	fmt.Printf("\nTotal nodes of the tree: %d", totalNodes)
 	fmt.Printf("\nNo. of levels of the tree: %d", height)
 	fmt.Println("\nRoot node keys: ", tree.Root.Key)
