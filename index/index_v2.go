@@ -36,91 +36,70 @@ func (tree *BPTree) Delete(key uint32) {
 	tree.deleteKey(node, key)
 }
 
-func (tree *BPTree) Print() {
-	fmt.Println("Tree:")
-	node := tree.Root
-	next := tree.Root.Children
-	fmt.Printf("%v\n", node.Key)
+// /// Serch function to query for nodes with value/range criteria (for experiments)
+func (tree *BPTree) Search(config SearchConfig, verbose bool) []*storage.RecordLocation {
+	if config.Type == ValueQuery {
+		key := config.Values[0]
+		node, count := tree.locateLeaf(key, verbose)
 
-	for {
-		if len(next) == 0 {
-			break
+		if verbose {
+			fmt.Printf("Total no. of index nodes accessed is:  %v\n", count)
 		}
-
-		var tempNext []*BPNode
-		for _, value := range next {
-			if value == nil {
-				continue
-			}
-			fmt.Printf("%v", value.Key)
-			if !value.IsLeaf {
-				tempNext = append(tempNext, value.Children...)
+		for i, item := range node.Key {
+			if item == key {
+				return node.DataPtr[i].getRecordsFromLinkedList()
 			}
 		}
-		fmt.Println("")
-		next = tempNext
-	}
-}
+		return nil
+	} else if config.Type == RangeQuery {
+		var records []*storage.RecordLocation
+		lower, upper := config.Values[0], config.Values[1]
 
-func (tree *BPTree) PrintLeaves() {
-	fmt.Println("Leaves:")
-	node, _ := tree.locateLeaf(0, false)
+		node, count := tree.locateLeaf(lower, verbose)
 
-	for node != nil {
-		fmt.Printf("%v -> ", node.Key)
+		// Process first node
+		for i, item := range node.Key {
+			if item == 0 {
+				break
+			}
+			if item >= lower {
+				records = append(records, node.DataPtr[i].getRecordsFromLinkedList()...)
+			}
+		}
 		node = node.Next
-	}
-	fmt.Println("End")
 
-}
+		for node != nil {
+			count += 1
 
-func (tree *BPTree) GetHeight() int {
-	cursor := tree.Root
-	height := 0
-
-	if cursor == nil {
-		return 0
-	}
-
-	for !cursor.IsLeaf {
-		cursor = cursor.Children[0]
-		height++
-	}
-	height += 1
-	return height
-}
-
-func (tree *BPTree) GetTotalNodes() int {
-	node := tree.Root
-
-	if node == nil {
-		return 0
-	}
-
-	children := tree.Root.Children
-
-	count := 1
-	for {
-		if len(children) == 0 {
-			break
-		}
-
-		var tempChildren []*BPNode
-		for _, value := range children {
-			if value == nil {
-				continue
+			if verbose {
+				if count <= 5 {
+					fmt.Printf("Node keys: %v\n", node.Key)
+				}
 			}
 
-			count++
-
-			if !value.IsLeaf {
-				tempChildren = append(tempChildren, value.Children...)
+			for i, item := range node.Key {
+				if item == 0 || item > upper {
+					break
+				}
+				records = append(records, node.DataPtr[i].getRecordsFromLinkedList()...)
 			}
-		}
-		children = tempChildren
-	}
 
-	return count
+			if node.Key[node.getKeySize()-1] >= upper {
+				// Range reached
+				break
+			}
+			node = node.Next
+
+		}
+		if verbose {
+			fmt.Printf("Total no. of index nodes accessed is: %v\n", count)
+		}
+		return records
+
+	} else {
+		fmt.Printf("Query type invalid! Try again...")
+	}
+	return nil
 }
 
 // Insert a record to the end of the record linked list
@@ -167,7 +146,7 @@ func (tree *BPTree) locateLeaf(key uint32, verbose bool) (*BPNode, int) {
 	}
 
 	if verbose {
-		fmt.Println("Node content while traversing the tree (up to first 5):")
+		fmt.Println("Node keys while traversing the tree (up to first 5):")
 	}
 
 	// Recursive search until leaf
@@ -176,7 +155,7 @@ func (tree *BPTree) locateLeaf(key uint32, verbose bool) (*BPNode, int) {
 		count++
 		if verbose {
 			if count <= 5 {
-				fmt.Printf("Node content: %v\n", cursor.Key)
+				fmt.Printf("Node keys: %v\n", cursor.Key)
 			}
 		}
 
@@ -199,7 +178,7 @@ func (tree *BPTree) locateLeaf(key uint32, verbose bool) (*BPNode, int) {
 
 	if verbose {
 		if count <= 5 {
-			fmt.Printf("Node content: %v\n", cursor.Key)
+			fmt.Printf("Node keys: %v\n", cursor.Key)
 		}
 	}
 
@@ -262,7 +241,7 @@ func getInsertIndex(keyList []uint32, key uint32) int {
 			return i
 		}
 	}
-	panic("Error: getInsertIndex()")
+	panic("Error incurred from getInsertIndex()!!!")
 }
 
 // Insert into leaf, given a space in leaf
@@ -628,71 +607,6 @@ func (node *BPNode) borrowFromNode(borrowFrom *BPNode, isPrev bool) {
 	}
 }
 
-func (tree *BPTree) Search(config SearchConfig, verbose bool) []*storage.RecordLocation {
-	if config.Type == ValueQuery {
-		key := config.Values[0]
-		node, count := tree.locateLeaf(key, verbose)
-
-		if verbose {
-			fmt.Printf("Total index node accessed: %v\n", count)
-		}
-		for i, item := range node.Key {
-			if item == key {
-				return node.DataPtr[i].getRecordsFromLinkedList()
-			}
-		}
-		return nil
-	} else if config.Type == RangeQuery {
-		var records []*storage.RecordLocation
-		lower, upper := config.Values[0], config.Values[1]
-
-		node, count := tree.locateLeaf(lower, verbose)
-
-		// Process first node
-		for i, item := range node.Key {
-			if item == 0 {
-				break
-			}
-			if item >= lower {
-				records = append(records, node.DataPtr[i].getRecordsFromLinkedList()...)
-			}
-		}
-		node = node.Next
-
-		for node != nil {
-			count += 1
-
-			if verbose {
-				if count <= 5 {
-					fmt.Printf("Node content: %v\n", node.Key)
-				}
-			}
-
-			for i, item := range node.Key {
-				if item == 0 || item > upper {
-					break
-				}
-				records = append(records, node.DataPtr[i].getRecordsFromLinkedList()...)
-			}
-
-			if node.Key[node.getKeySize()-1] >= upper {
-				// Range reached
-				break
-			}
-			node = node.Next
-
-		}
-		if verbose {
-			fmt.Printf("Total index node accessed: %v\n", count)
-		}
-		return records
-
-	} else {
-		fmt.Printf("Incorrect query type")
-	}
-	return nil
-}
-
 func (recordNode *RecordLLNode) getRecordsFromLinkedList() []*storage.RecordLocation {
 	res := []*storage.RecordLocation{recordNode.RecordInfo}
 	for recordNode.Next != nil {
@@ -702,6 +616,8 @@ func (recordNode *RecordLLNode) getRecordsFromLinkedList() []*storage.RecordLoca
 	return res
 }
 
+// //////////////////////////////////////////////////////////////////////////////////////
+// ////UTILS Functions
 type SearchConfig struct {
 	Type   string // RangeQuery or Value query
 	Values []uint32
@@ -709,3 +625,90 @@ type SearchConfig struct {
 
 const RangeQuery string = "range"
 const ValueQuery string = "value"
+
+func (tree *BPTree) Print() {
+	fmt.Println("Tree:")
+	node := tree.Root
+	next := tree.Root.Children
+	fmt.Printf("%v\n", node.Key)
+
+	for {
+		if len(next) == 0 {
+			break
+		}
+
+		var tempNext []*BPNode
+		for _, value := range next {
+			if value == nil {
+				continue
+			}
+			fmt.Printf("%v", value.Key)
+			if !value.IsLeaf {
+				tempNext = append(tempNext, value.Children...)
+			}
+		}
+		fmt.Println("")
+		next = tempNext
+	}
+}
+
+func (tree *BPTree) PrintLeaves() {
+	fmt.Println("Leaves:")
+	node, _ := tree.locateLeaf(0, false)
+
+	for node != nil {
+		fmt.Printf("%v -> ", node.Key)
+		node = node.Next
+	}
+	fmt.Println("End")
+
+}
+
+func (tree *BPTree) GetHeight() int {
+	cursor := tree.Root
+	height := 0
+
+	if cursor == nil {
+		return 0
+	}
+
+	for !cursor.IsLeaf {
+		cursor = cursor.Children[0]
+		height++
+	}
+	height += 1
+	return height
+}
+
+func (tree *BPTree) GetTotalNodes() int {
+	node := tree.Root
+
+	if node == nil {
+		return 0
+	}
+
+	children := tree.Root.Children
+
+	count := 1
+	for {
+		if len(children) == 0 {
+			break
+		}
+
+		var tempChildren []*BPNode
+		for _, value := range children {
+			if value == nil {
+				continue
+			}
+
+			count++
+
+			if !value.IsLeaf {
+				tempChildren = append(tempChildren, value.Children...)
+			}
+		}
+		children = tempChildren
+	}
+
+	return count
+}
